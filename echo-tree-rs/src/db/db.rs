@@ -2,14 +2,14 @@ use super::{tree_hierarchy::TreeHierarchy, tree_map::TreeMap};
 
 pub struct DatabaseConfig {
   db_path: String,
-  root_name: String,
+  metadata_path: String,
 }
 
 impl Default for DatabaseConfig {
   fn default() -> Self {
     DatabaseConfig {
       db_path: "tree.kvdb".to_string(),
-      root_name: "root".to_string(),
+      metadata_path: "metadata".to_string(),
     }
   }
 }
@@ -17,18 +17,17 @@ impl Default for DatabaseConfig {
 pub struct Database {
   hierarchy: TreeHierarchy,
   trees: TreeMap,
-  config: DatabaseConfig,
 }
 
 impl Database {
   pub fn new(config: DatabaseConfig) -> Database {
     let db: sled::Db = sled::open(config.db_path.clone()).expect(format!("open failed for {}", config.db_path).as_str());
-    let hierarchy = TreeHierarchy::open(&db, format!("{}/{}", config.root_name, "metadata"));
+    let hierarchy = TreeHierarchy::open(&db, config.metadata_path.clone());
 
     // create the tree map from the hierarchy
     let trees = hierarchy.get_tree_map();
 
-    Database { hierarchy, trees, config }
+    Database { hierarchy, trees }
   }
 
   pub fn get_hierarchy(&self) -> &TreeHierarchy {
@@ -52,19 +51,16 @@ impl Database {
   }
 
   pub fn add_tree(&mut self, tree: String, schema: String) {
-    let tree = format!("{}/{}", self.config.root_name, tree);
     self.hierarchy.insert_schema(tree.clone(), schema);
     self.trees.open_tree(tree);
   }
 
   pub fn remove_tree(&mut self, tree: String) {
-    let tree = format!("{}/{}", self.config.root_name, tree);
     self.hierarchy.remove_schema(tree.clone());
     self.trees.remove_tree(tree);
   }
 
   pub fn insert(&self, tree: String, key: String, value: String) -> Option<String> {
-    let tree = format!("{}/{}", self.config.root_name, tree);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         tree.insert(key, value.as_bytes()).expect("insert failed");
@@ -75,7 +71,6 @@ impl Database {
   }
 
   pub fn get(&self, tree: String, key: String) -> Option<String> {
-    let tree = format!("{}/{}", self.config.root_name, tree);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         match tree.get(key) {
@@ -89,7 +84,6 @@ impl Database {
   }
 
   pub fn remove(&self, tree: String, key: String) -> Option<String> {
-    let tree = format!("{}/{}", self.config.root_name, tree);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         tree.remove(key).expect("remove failed");

@@ -30,11 +30,20 @@ fn main() {
   let contact_s = serde_json::to_string(&contact).unwrap();
   database.insert("model/clients".to_string(), contact.name, contact_s);
 
-  // print schema
-  println!("schema: {}", database.get_hierarchy().get_schema("root/model/clients".to_string()));
+  println!("\n\n -- Data --");
   // print contact
   let contact_from_db = database.get("model/clients".to_string(), "John Doe".to_string()).unwrap();
   let contact_from_db: Contact = serde_json::from_str(&contact_from_db).unwrap();
-
   println!("contact: {:?}", contact_from_db.name);
+
+  // print all schemas
+  println!("\n\n -- Schema --");
+  database.get_hierarchy().iter().for_each(|result| {
+    if let Ok((k, v)) = result {
+      // ivec as string
+      let k = std::str::from_utf8(&k).unwrap();
+      let v = std::str::from_utf8(&v).unwrap();
+      println!("tree: {}, schema: {}", k, v);
+    }
+  });
 }
