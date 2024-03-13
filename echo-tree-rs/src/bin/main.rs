@@ -1,26 +1,40 @@
+use echo_tree_rs::db;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(JsonSchema, Serialize, Deserialize, Debug)]
 struct Contact {
   name: String,
   email: String,
   phone: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Account {
-  username: String,
-  password: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct MetaData {
-  hierarchy: serde_json::Value, // This is a JSON object that represents the full db tree
-}
-
 fn main() {
-  let db: sled::Db = sled::open("stash.kvdb").unwrap();
-  let tree = db.open_tree("model/client").expect("open_tree failed");
+  let mut database = db::Database::new();
+
+  let contact = Contact {
+    name: "John Doe".to_string(),
+    email: "".to_string(),
+    phone: "123-456-7890".to_string(),
+  };
+
+  let schema = schemars::schema_for!(Contact);
+  let schema = serde_json::to_string(&schema).unwrap();
+
+  database.add_tree("model/clients".to_string(), schema);
+
+
+  // serialize the contact and insert it into the database
+  let contact_s = serde_json::to_string(&contact).unwrap();
+  database.insert("model/clients".to_string(), contact.name, contact_s);
+
+  // print schema
+  println!("schema: {}", database.get_schema("model/clients".to_string()));
+  // print contact
+  let contact_from_db = database.get("model/clients".to_string(), "John Doe".to_string()).unwrap();
+  let contact_from_db: Contact = serde_json::from_str(&contact_from_db).unwrap();
+
+  println!("contact: {:?}", contact_from_db.name);
 }
