@@ -1,0 +1,2 @@
+GET http://localhost:2121/register/connor
+X-Auth-Token: 123456

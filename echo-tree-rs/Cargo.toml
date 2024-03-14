@@ -13,6 +13,7 @@ serde_json = "1.0.114"
 sled = "0.34.7"
 warp = "0.3.6"
 pretty_env_logger = { version = "0.5.0", optional = true }
+tokio = { version = "1.36.0", features = ["full"] }
 
 [features]
 logging = ["pretty_env_logger"]

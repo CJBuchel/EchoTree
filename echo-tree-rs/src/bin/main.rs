@@ -1,4 +1,4 @@
-use echo_tree_rs::db;
+use echo_tree_rs::{db, server};
 use log::info;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,8 @@ struct Contact {
   phone: String,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
   #[cfg(feature = "logging")]
   {
     // initialize the logger
@@ -55,4 +56,6 @@ fn main() {
       info!("tree: {}, schema: {}", k, v);
     }
   });
+
+  server::server().await;
 }
