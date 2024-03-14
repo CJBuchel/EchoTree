@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use log::{error, warn};
+
 
 pub struct TreeMap {
   db: sled::Db,
@@ -37,31 +39,39 @@ impl TreeMap {
 
   pub fn open_tree(&mut self, tree: String) {
     if self.tree_map.contains_key(&tree) {
-      println!("tree already exists: {}", tree);
+      warn!("tree already exists: {}", tree);
       return
     }
 
     if tree.starts_with(self.metadata_path.as_str()) {
-      println!("metadata trees are forbidden: {}", tree);
+      warn!("metadata trees are forbidden: {}", tree);
       return
     }
 
-    let t = self.db.open_tree(tree.clone()).expect(format!("open_tree failed for {}", tree).as_str());
-    self.tree_map.insert(tree, t);
+    match self.db.open_tree(tree.clone()) {
+      Ok(t) => self.tree_map.insert(tree, t),
+      Err(e) => {
+        error!("open_tree failed for {}: {}", tree, e);
+        None
+      }
+    };
   }
 
   pub fn remove_tree(&mut self, tree: String) {
     if !self.tree_map.contains_key(&tree) {
-      println!("tree does not exist: {}", tree);
+      warn!("tree does not exist: {}", tree);
     }
 
     if tree.starts_with(self.metadata_path.as_str()) {
-      println!("metadata trees are forbidden: {}", tree);
+      warn!("metadata trees are forbidden: {}", tree);
       return
     }
     
     self.tree_map.remove(&tree);
-    self.db.drop_tree(tree.to_owned()).expect(format!("drop_tree failed for {}", tree).as_str());
+    match self.db.drop_tree(tree.to_owned()) {
+      Ok(_) => warn!("dropped tree: {}", tree),
+      Err(e) => error!("drop_tree failed for {}: {}", tree, e)
+    };
   }
 
   pub fn get_tree(&self, tree: String) -> Option<&sled::Tree> {

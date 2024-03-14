@@ -1,4 +1,5 @@
 use echo_tree_rs::db;
+use log::info;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +13,14 @@ struct Contact {
 }
 
 fn main() {
+  #[cfg(feature = "logging")]
+  {
+    // initialize the logger
+    // set log level
+    pretty_env_logger::init();
+  }
+
+
   let mut database = db::db::Database::new(db::db::DatabaseConfig::default());
 
   let contact = Contact {
@@ -30,20 +39,20 @@ fn main() {
   let contact_s = serde_json::to_string(&contact).unwrap();
   database.insert("model/clients".to_string(), contact.name, contact_s);
 
-  println!("\n\n -- Data --");
+  info!("\n\n -- Data --");
   // print contact
   let contact_from_db = database.get("model/clients".to_string(), "John Doe".to_string()).unwrap();
   let contact_from_db: Contact = serde_json::from_str(&contact_from_db).unwrap();
-  println!("contact: {:?}", contact_from_db.name);
+  info!("contact: {:?}", contact_from_db.name);
 
   // print all schemas
-  println!("\n\n -- Schema --");
+  info!("\n\n -- Schema --");
   database.get_hierarchy().iter().for_each(|result| {
     if let Ok((k, v)) = result {
       // ivec as string
       let k = std::str::from_utf8(&k).unwrap();
       let v = std::str::from_utf8(&v).unwrap();
-      println!("tree: {}, schema: {}", k, v);
+      info!("tree: {}, schema: {}", k, v);
     }
   });
 }

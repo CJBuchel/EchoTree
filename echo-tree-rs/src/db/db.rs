@@ -1,3 +1,5 @@
+use log::error;
+
 use super::{tree_hierarchy::TreeHierarchy, tree_map::TreeMap};
 
 pub struct DatabaseConfig {
@@ -60,36 +62,63 @@ impl Database {
     self.trees.remove_tree(tree);
   }
 
+  // returns value if it exists
   pub fn insert(&self, tree: String, key: String, value: String) -> Option<String> {
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
-        tree.insert(key, value.as_bytes()).expect("insert failed");
-        None
+        match tree.insert(key, value.as_bytes()) {
+          // IVec as string
+          Ok(v) => {
+            match v {
+              Some(v) => Some(std::str::from_utf8(&v).unwrap().to_string()),
+              None => None
+            }
+          },
+          Err(e) => {
+            error!("insert failed: {}", e);
+            None
+          }
+        }
       },
-      None => Some(format!("tree does not exist: {}", tree))
+      None => None
     }
   }
 
+  // returns value if it exists
   pub fn get(&self, tree: String, key: String) -> Option<String> {
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         match tree.get(key) {
           Ok(Some(value)) => Some(std::str::from_utf8(&value).unwrap().to_string()),
           Ok(None) => None,
-          Err(e) => Some(format!("get failed: {}", e))
+          Err(e) => {
+            error!("get failed: {}", e);
+            None
+          }
         }
       },
-      None => Some(format!("tree does not exist: {}", tree))
+      None => None
     }
   }
 
+  // returns value if it exists
   pub fn remove(&self, tree: String, key: String) -> Option<String> {
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
-        tree.remove(key).expect("remove failed");
-        None
+        match tree.remove(key) {
+          Ok(v) => {
+            match v {
+              Some(v) => Some(std::str::from_utf8(&v).unwrap().to_string()),
+              None => None
+            }
+          },
+          Err(e) => {
+            error!("remove failed: {}", e);
+            None
+          }
+        }
       },
-      None => Some(format!("tree does not exist: {}", tree))
+      None => None
     }
   }
 }
