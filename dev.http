@@ -1,2 +1,15 @@
-GET http://localhost:2121/register/connor
-X-Auth-Token: 123456
+### health
+GET https://localhost:2121/pulse
+
+###
+POST https://localhost:2121/register
+Content-Type: application/json
+
+{
+  "echo_trees": [],
+  "username": "user1",
+  "password": "password1"
+}
+
+###
+DELETE https://localhost:2121/register/f899e5dd-0804-4e43-8733-7f6f289228ce

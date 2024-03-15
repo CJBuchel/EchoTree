@@ -1,4 +1,4 @@
-use log::error;
+use log::{debug, error};
 
 use super::{tree_hierarchy::TreeHierarchy, tree_map::TreeMap};
 
@@ -64,6 +64,7 @@ impl Database {
 
   // returns value if it exists
   pub fn insert(&self, tree: String, key: String, value: String) -> Option<String> {
+    debug!("INSERT into tree: {}, key: {}", tree, key);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         match tree.insert(key, value.as_bytes()) {
@@ -86,6 +87,7 @@ impl Database {
 
   // returns value if it exists
   pub fn get(&self, tree: String, key: String) -> Option<String> {
+    debug!("GET from tree: {}, key: {}", tree, key);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         match tree.get(key) {
@@ -103,6 +105,7 @@ impl Database {
 
   // returns value if it exists
   pub fn remove(&self, tree: String, key: String) -> Option<String> {
+    debug!("REMOVE from tree: {}, key: {}", tree, key);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
         match tree.remove(key) {

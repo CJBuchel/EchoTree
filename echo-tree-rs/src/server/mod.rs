@@ -1,31 +1,26 @@
-use warp::Filter;
 
-use self::security::check_auth;
-
-mod security;
-
-async fn test_echo() -> Result<String, warp::Rejection> {
-  Ok(format!("echo: hello"))
-}
-
-pub fn test_filter() -> impl Filter<Extract = (String,), Error = warp::Rejection> + Clone {
-  warp::path("test")
-    .and(warp::get())
-    .and(warp::path::end())
-    .and(check_auth().untuple_one())
-    .and_then(test_echo)
-}
+mod register_handlers;
+mod ws_handlers;
+mod client_filter;
 
 pub async fn server() {
-  let register = warp::path("register")
-    .and(warp::path::param())
-    .and(warp::header("user-agent"))
-    .and(check_auth().untuple_one())
-    .map(|param: String, agent: String| {
-      format!("register: {} with user-agent: {}", param, agent)
-    });
+  let subject_alt_names = vec!["localhost".to_string(), "127.0.0.1".to_string()];
+  let cert = rcgen::generate_simple_self_signed(subject_alt_names).unwrap();
 
-  // warp server
-  let routes = test_filter().or(register);
-  warp::serve(routes).run(([127,0,0,1], 2121)).await;
+  // save the files to disk
+  std::fs::write("cert.pem", cert.serialize_pem().unwrap()).unwrap();
+  std::fs::write("key.rsa", cert.serialize_private_key_pem()).unwrap();
+
+  // create the clients collection
+  let clients = std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new()));
+  let client_routes = client_filter::client_filter(clients.clone());
+
+  let routes = client_routes;
+
+  warp::serve(routes)
+    .tls()
+    .cert_path("cert.pem")
+    .key_path("key.rsa")
+    .run(([127, 0, 0, 1], 2121))
+    .await;
 }
