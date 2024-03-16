@@ -1,0 +1,250 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GeneratedRootSchema",
+  "type": "object",
+  "required": [
+    "echo_event",
+    "register_request",
+    "register_response",
+    "role",
+    "role_authenticate_request"
+  ],
+  "properties": {
+    "echo_event": {
+      "$ref": "#/definitions/EchoEvent"
+    },
+    "register_request": {
+      "$ref": "#/definitions/RegisterRequest"
+    },
+    "register_response": {
+      "$ref": "#/definitions/RegisterResponse"
+    },
+    "role": {
+      "$ref": "#/definitions/Role"
+    },
+    "role_authenticate_request": {
+      "$ref": "#/definitions/RoleAuthenticateRequest"
+    }
+  },
+  "definitions": {
+    "EchoEvent": {
+      "type": "object",
+      "required": [
+        "auth_token",
+        "method"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/definitions/MethodProtocol"
+        }
+      }
+    },
+    "MethodProtocol": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Set"
+          ],
+          "properties": {
+            "Set": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "maxItems": 3,
+              "minItems": 3
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Get"
+          ],
+          "properties": {
+            "Get": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "maxItems": 2,
+              "minItems": 2
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Delete"
+          ],
+          "properties": {
+            "Delete": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "maxItems": 2,
+              "minItems": 2
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Echo"
+          ],
+          "properties": {
+            "Echo": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "maxItems": 2,
+              "minItems": 2
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Subscribe"
+          ],
+          "properties": {
+            "Subscribe": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Unsubscribe"
+          ],
+          "properties": {
+            "Unsubscribe": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "RegisterRequest": {
+      "type": "object",
+      "required": [
+        "echo_trees"
+      ],
+      "properties": {
+        "echo_trees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RegisterResponse": {
+      "type": "object",
+      "required": [
+        "auth_token",
+        "uuid"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      }
+    },
+    "Role": {
+      "description": "Role used for authentication to branches of the database",
+      "type": "object",
+      "required": [
+        "echo_trees",
+        "password",
+        "role_id"
+      ],
+      "properties": {
+        "echo_trees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "string"
+        }
+      }
+    },
+    "RoleAuthenticateRequest": {
+      "type": "object",
+      "required": [
+        "password",
+        "role_id"
+      ],
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

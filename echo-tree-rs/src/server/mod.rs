@@ -1,4 +1,4 @@
-use crate::protocol::EchoDB;
+use crate::common::EchoDB;
 
 mod handlers;
 mod filters;

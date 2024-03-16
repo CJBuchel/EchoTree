@@ -1,4 +1,6 @@
-#[derive(serde::Deserialize, serde::Serialize)]
+use schemars::JsonSchema;
+
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub enum MethodProtocol {
   // generic methods
   Set(String, String, String), // tree, key, data
@@ -11,7 +13,7 @@ pub enum MethodProtocol {
   Unsubscribe(Vec<String>), // tree
 }
 
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct EchoEvent {
   pub auth_token: String,
   pub method: MethodProtocol,

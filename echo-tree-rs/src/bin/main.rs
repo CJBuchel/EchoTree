@@ -1,4 +1,4 @@
-use echo_tree_rs::{db, protocol::EchoDB, server};
+use echo_tree_rs::{common::EchoDB, db, server};
 use log::info;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,7 @@
 use log::debug;
+use protocol::schemas::http_protocol::{RegisterRequest, RegisterResponse};
 
-use crate::protocol::{http_protocol::{RegisterRequest, RegisterResponse}, Client, Clients, EchoDB, ResponseResult};
+use crate::common::{Client, Clients, EchoDB, ResponseResult};
 
 async fn register_client(uuid: String, auth_token:String, echo_trees: Vec<String>, role_trees: Vec<String>, clients: Clients) {
 

@@ -1,6 +1,5 @@
 use log::{error, info, warn};
-
-use crate::protocol::Role;
+use protocol::schemas::Role;
 
 
 pub struct RoleManager {

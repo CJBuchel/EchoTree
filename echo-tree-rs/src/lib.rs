@@ -1,5 +1,5 @@
 pub mod db;
-pub mod protocol;
+pub mod common;
 pub mod server;
 
 #[cfg(test)]

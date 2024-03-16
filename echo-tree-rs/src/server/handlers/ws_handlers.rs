@@ -1,7 +1,8 @@
 use futures::{FutureExt, StreamExt};
 use log::{debug, error, info};
+use protocol::schemas::socket_protocol::{EchoEvent, MethodProtocol};
 
-use crate::protocol::{socket_protocol::{EchoEvent, MethodProtocol}, Client, Clients, ResponseResult};
+use crate::common::{Client, Clients, ResponseResult};
 
 async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) -> bool {
   let client = match clients.read().await.get(&uuid) {

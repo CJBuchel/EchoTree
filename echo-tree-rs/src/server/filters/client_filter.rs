@@ -1,6 +1,6 @@
 use warp::Filter;
 
-use crate::protocol::{with_clients, with_db, Clients, EchoDB};
+use crate::common::{with_clients, with_db, Clients, EchoDB};
 use crate::server::handlers::register_handlers::{pulse_handler, register_handler, unregister_handler};
 use crate::server::handlers::ws_handlers::ws_handler;
 
