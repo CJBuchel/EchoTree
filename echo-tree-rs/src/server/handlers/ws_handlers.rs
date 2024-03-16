@@ -1,23 +1,63 @@
 use futures::{FutureExt, StreamExt};
+use log::{debug, error, info};
 
-use crate::protocol::{Client, Clients, ResponseResult};
+use crate::protocol::{socket_protocol::{EchoEvent, MethodProtocol}, Client, Clients, ResponseResult};
+
+async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) -> bool {
+  let client = match clients.read().await.get(&uuid) {
+    Some(c) => c.clone(),
+    None => {
+      error!("{}: client not found", uuid);
+      return false;
+    }
+  };
+
+  if client.auth_token != auth_token {
+    error!("{}: auth token mismatch", uuid);
+    return false;
+  }
+
+  true
+}
 
 async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Clients) {
-  log::debug!("{}: {:?}", uuid, msg);
+  debug!("{}: {:?}", uuid, msg);
 
   let message = match msg.to_str() {
     Ok(v) => v,
     Err(e) => {
-      log::error!("{}: {:?}", uuid, e);
+      error!("{}: {:?}", uuid, e);
       return;
     }
   };
 
   if message == "ping" || message == "ping\n" {
+    debug!("{}: pong", uuid);
     return;
   }
 
-  // @TODO: handle client messages
+  let echo_event: EchoEvent = match serde_json::from_str(message) {
+    Ok(v) => v,
+    Err(e) => {
+      error!("{}: {:?}", uuid, e);
+      return;
+    }
+  };
+
+  // check auth code
+  if !check_client_auth(uuid.clone(), echo_event.auth_token, clients).await {
+    return;
+  }
+
+  // match the method protocol
+  match echo_event.method {
+    MethodProtocol::Subscribe(trees) => {
+      trees.iter().for_each(|tree| {
+        debug!("{}: subscribe to {}", uuid, tree);
+      });
+    },
+    _ => {},
+  }
 }
 
 async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clients, mut client: Client) {
@@ -27,20 +67,20 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
   let client_recv = tokio_stream::wrappers::UnboundedReceiverStream::new(client_recv);
   tokio::task::spawn(client_recv.forward(client_ws_sender).map(|result| {
     if let Err(e) = result {
-      log::error!("websocket send error: {}", e);
+      error!("websocket send error: {}", e);
     }
   }));
 
   client.sender = Some(client_sender);
   clients.write().await.insert(uuid.clone(), client);
 
-  log::info!("{} connected", uuid);
+  info!("{} connected", uuid);
 
   while let Some(result) = client_ws_recv.next().await {
     let msg = match result {
       Ok(msg) => msg,
       Err(e) => {
-        log::error!("{}: {:?}", uuid, e);
+        error!("{}: {:?}", uuid, e);
         break;
       }
     };
@@ -50,7 +90,7 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
   }
 
   clients.write().await.remove(&uuid);
-  log::info!("{} disconnected", uuid);
+  info!("{} disconnected", uuid);
 }
 
 // -> ResponseResult<impl warp::Reply>
@@ -61,9 +101,7 @@ pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: Clients) -> Res
 
     // client found
     Some(c) => {
-      Ok(
-        ws.on_upgrade(move |socket| client_connection(socket, uuid, clients, c))
-      )
+      Ok(ws.on_upgrade(move |socket| client_connection(socket, uuid, clients, c)))
     },
 
     // client not found

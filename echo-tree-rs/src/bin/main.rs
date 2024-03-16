@@ -1,4 +1,4 @@
-use echo_tree_rs::{db, server};
+use echo_tree_rs::{db, protocol::EchoDB, server};
 use log::info;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ struct Contact {
 
 #[tokio::main]
 async fn main() {
+  // for local debugging only
   #[cfg(feature = "logging")]
   {
     // initialize the logger
@@ -57,5 +58,6 @@ async fn main() {
     }
   });
 
-  server::server().await;
+  let database: EchoDB = std::sync::Arc::new(tokio::sync::RwLock::new(database));
+  server::server(database).await;
 }

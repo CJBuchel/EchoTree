@@ -1,14 +1,12 @@
 use warp::Filter;
 
-use crate::protocol::{with_clients, Clients};
-
-use super::{register_handlers::{self, pulse_handler, register_handler}, ws_handlers};
-
-
+use crate::protocol::{with_clients, with_db, Clients, EchoDB};
+use crate::server::handlers::register_handlers::{pulse_handler, register_handler, unregister_handler};
+use crate::server::handlers::ws_handlers::ws_handler;
 
 // client routes
 // 
-pub fn client_filter(clients: Clients) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn client_filter(clients: Clients, database: EchoDB) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
   let pulse_route = warp::path("pulse").and_then(pulse_handler);
 
   let register = warp::path("register");
@@ -17,25 +15,31 @@ pub fn client_filter(clients: Clients) -> impl warp::Filter<Extract = impl warp:
     .and(warp::post())
     .and(warp::body::json())
     .and(with_clients(clients.clone()))
+    .and(with_db(database.clone()))
     .and_then(register_handler);
 
   let unregister_routes = register
     .and(warp::delete())
     .and(warp::path::param())
     .and(with_clients(clients.clone()))
-    .and_then(register_handlers::unregister_handler);
+    .and_then(unregister_handler);
 
   let ws_route = warp::path("ws")
     .and(warp::ws())
     .and(warp::path::param())
     .and(with_clients(clients.clone()))
-    .and_then(ws_handlers::ws_handler);
+    .and_then(ws_handler);
+
+  let cors = warp::cors()
+    .allow_any_origin()
+    .allow_headers(vec!["content-type"])
+    .allow_methods(vec!["GET", "POST", "DELETE", "OPTIONS"]);
 
   let routes = pulse_route
     .or(register_routes)
     .or(unregister_routes)
     .or(ws_route)
-    .with(warp::cors().allow_any_origin());
+    .with(cors);
 
   routes
 }
