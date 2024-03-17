@@ -2,10 +2,12 @@ use std::collections::HashMap;
 
 use log::{error, warn};
 
+use super::managed_tree::ManagedTree;
+
 
 pub struct TreeMap {
   db: sled::Db,
-  tree_map: HashMap<String, sled::Tree>,
+  tree_map: HashMap<String, ManagedTree>,
   metadata_path: String,
 }
 
@@ -21,7 +23,7 @@ impl TreeMap {
   // clears all the values in every tree (does not delete the trees themselves)
   pub fn clear(&mut self) {
     // clear the trees in the map
-    self.tree_map.iter().for_each(|(_, v)| {
+    self.tree_map.iter_mut().for_each(|(_, v)| {
       let _ = v.clear();
     });
   }
@@ -29,9 +31,12 @@ impl TreeMap {
   // drops all the trees, not recoverable unless new trees are created
   pub fn drop(&mut self) {
     // drop the trees in the map
-    self.tree_map.iter().for_each(|(k, _)| {
-      let _ = self.db.drop_tree(k);
-    });
+    for (k, v) in self.tree_map.iter_mut() {
+      match v.drop() {
+        Ok(_) => warn!("dropped tree: {}", k),
+        Err(e) => error!("drop_tree failed for {}: {}", k, e)
+      };
+    }
 
     self.tree_map.clear();
   }
@@ -48,13 +53,15 @@ impl TreeMap {
       return
     }
 
-    match self.db.open_tree(tree.clone()) {
-      Ok(t) => self.tree_map.insert(tree, t),
+    let managed_tree = match ManagedTree::new(&self.db, tree.clone()) {
+      Ok(t) => t,
       Err(e) => {
-        error!("open_tree failed for {}: {}", tree, e);
-        None
+        error!("ManagedTree::new failed for {}: {}", tree, e);
+        return
       }
     };
+
+    self.tree_map.insert(tree, managed_tree);
   }
 
   pub fn remove_tree(&mut self, tree: String) {
@@ -66,15 +73,22 @@ impl TreeMap {
       warn!("metadata trees are forbidden: {}", tree);
       return
     }
+
+    match self.tree_map.get_mut(&tree) {
+      Some(t) => {
+        let _ = t.drop();
+      },
+      None => ()
+    };
     
     self.tree_map.remove(&tree);
-    match self.db.drop_tree(tree.to_owned()) {
-      Ok(_) => warn!("dropped tree: {}", tree),
-      Err(e) => error!("drop_tree failed for {}: {}", tree, e)
-    };
   }
 
-  pub fn get_tree(&self, tree: String) -> Option<&sled::Tree> {
+  pub fn get_tree(&self, tree: String) -> Option<&ManagedTree> {
     self.tree_map.get(&tree)
+  }
+
+  pub fn get_tree_mut(&mut self, tree: String) -> Option<&mut ManagedTree> {
+    self.tree_map.get_mut(&tree)
   }
 }

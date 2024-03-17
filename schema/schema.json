@@ -27,6 +27,23 @@
     }
   },
   "definitions": {
+    "Checksum": {
+      "type": "object",
+      "required": [
+        "checksum",
+        "tree"
+      ],
+      "properties": {
+        "checksum": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "tree": {
+          "type": "string"
+        }
+      }
+    },
     "EchoEvent": {
       "type": "object",
       "required": [
@@ -49,6 +66,15 @@
     "MethodParameters": {
       "type": "object",
       "properties": {
+        "checksums": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Checksum"
+          }
+        },
         "data": {
           "type": [
             "string",
@@ -78,6 +104,7 @@
         "Set",
         "Get",
         "Delete",
+        "Checksum",
         "Echo",
         "Subscribe",
         "Unsubscribe"

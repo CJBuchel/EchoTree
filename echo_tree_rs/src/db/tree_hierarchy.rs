@@ -1,21 +1,21 @@
 use log::{error, info, warn};
 
-use super::tree_map::TreeMap;
+use super::{managed_tree::ManagedTree, tree_map::TreeMap};
 
 
 pub struct TreeHierarchy {
   db: sled::Db,
-  hierarchy: sled::Tree,
+  hierarchy: ManagedTree,
   metadata_path: String,
 }
 
 impl TreeHierarchy {
   pub fn open(db: &sled::Db, metadata_path: String) -> TreeHierarchy {
-    let hierarchy = match db.open_tree(format!("{}/hierarchy", metadata_path)) {
-      Ok(hierarchy) => hierarchy,
+    let hierarchy = match ManagedTree::new(db, format!("{}/hierarchy", metadata_path)) {
+      Ok(h) => h,
       Err(e) => {
-        error!("open_tree failed: {}", e);
-        panic!("open_tree failed");
+        error!("ManagedTree::new failed: {}", e);
+        panic!("ManagedTree::new failed");
       }
     };
     TreeHierarchy { db: db.clone(), hierarchy, metadata_path }
@@ -24,8 +24,8 @@ impl TreeHierarchy {
   pub fn get_tree_map(&self) -> TreeMap {
     let mut tree_map = TreeMap::new(&self.db, self.metadata_path.clone());
 
-    self.hierarchy.iter().for_each(|tree| {
-      let (k, _) = tree.unwrap_or_default();
+    self.hierarchy.iter().for_each(|branch| {
+      let (k, _) = branch.unwrap_or_default();
       let k = std::str::from_utf8(&k).unwrap();
       info!("opening tree: {}", k);
 
@@ -40,7 +40,7 @@ impl TreeHierarchy {
   }
 
   // clears all the values in the hierarchy tree (does not delete the tree itself)
-  pub fn clear(&self) {
+  pub fn clear(&mut self) {
     match self.hierarchy.clear() {
       Ok(_) => warn!("cleared hierarchy tree"),
       Err(e) => error!("clear failed: {}", e)
@@ -55,7 +55,7 @@ impl TreeHierarchy {
     }
   }
 
-  pub fn insert_schema(&self, tree: String, schema: String) {
+  pub fn insert_schema(&mut self, tree: String, schema: String) {
     // update the hierarchy tree with the new tree
     let schema = schema.to_string();
     match self.hierarchy.insert(tree.as_bytes(), schema.as_bytes()) {
@@ -80,7 +80,7 @@ impl TreeHierarchy {
     }
   }
 
-  pub fn remove_schema(&self, tree: String) {
+  pub fn remove_schema(&mut self, tree: String) {
     match self.hierarchy.remove(tree.as_bytes()) {
       Ok(_) => info!("removed schema: {}", tree),
       Err(e) => error!("remove failed: {}", e)

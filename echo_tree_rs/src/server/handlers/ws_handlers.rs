@@ -1,8 +1,8 @@
 use futures::{FutureExt, StreamExt};
-use log::{debug, error, info};
-use protocol::schemas::socket_protocol::{EchoEvent, MethodType};
+use log::{debug, error, info, warn};
+use protocol::schemas::socket_protocol::EchoEvent;
 
-use crate::common::{Client, Clients, ResponseResult};
+use crate::{common::{Client, Clients, EchoDB, ResponseResult}, server::handlers::broker::echo_message_broker};
 
 async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) -> bool {
   let client = match clients.read().await.get(&uuid) {
@@ -14,14 +14,14 @@ async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) 
   };
 
   if client.auth_token != auth_token {
-    error!("{}: auth token mismatch", uuid);
+    warn!("{}: auth token mismatch", uuid);
     return false;
   }
 
   true
 }
 
-async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Clients) {
+async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Clients, db: &EchoDB) {
   debug!("{}: {:?}", uuid, msg);
 
   let message = match msg.to_str() {
@@ -46,21 +46,15 @@ async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Cli
   };
 
   // check auth code
-  if !check_client_auth(uuid.clone(), echo_event.auth_token, clients).await {
+  if !check_client_auth(uuid.clone(), echo_event.auth_token.clone(), clients).await {
     return;
   }
 
   // match the method protocol
-  match echo_event.method {
-    MethodType::Subscribe => {
-      // print the vector of trees
-      debug!("{}: subscribe {:?}", uuid, echo_event.params.trees);
-    },
-    _ => {},
-  }
+  echo_message_broker(uuid, echo_event, clients, db).await;
 }
 
-async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clients, mut client: Client) {
+async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clients, mut client: Client, db: EchoDB) {
   let (client_ws_sender, mut client_ws_recv) = ws.split();
   let (client_sender, client_recv) = tokio::sync::mpsc::unbounded_channel();
 
@@ -86,7 +80,7 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
     };
 
     // client message
-    client_msg(uuid.clone(), msg, &clients).await;
+    client_msg(uuid.clone(), msg, &clients, &db).await;
   }
 
   clients.write().await.remove(&uuid);
@@ -94,14 +88,14 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
 }
 
 // -> ResponseResult<impl warp::Reply>
-pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: Clients) -> ResponseResult<impl warp::Reply>  {
+pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: Clients, db: EchoDB) -> ResponseResult<impl warp::Reply>  {
   let client = clients.read().await.get(&uuid).cloned();
 
   match client {
 
     // client found
     Some(c) => {
-      Ok(ws.on_upgrade(move |socket| client_connection(socket, uuid, clients, c)))
+      Ok(ws.on_upgrade(move |socket| client_connection(socket, uuid, clients, c, db)))
     },
 
     // client not found

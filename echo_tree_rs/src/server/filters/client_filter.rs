@@ -29,6 +29,7 @@ pub fn client_filter(clients: Clients, database: EchoDB, port: u16) -> impl warp
     .and(warp::ws())
     .and(warp::path::param())
     .and(with_clients(clients.clone()))
+    .and(with_db(database.clone()))
     .and_then(ws_handler);
 
   let cors = warp::cors()

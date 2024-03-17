@@ -71,11 +71,11 @@ impl Database {
   }
 
   // returns value if it exists
-  pub fn insert(&self, tree: String, key: String, value: String) -> Option<String> {
+  pub fn insert(&mut self, tree: String, key: String, value: String) -> Option<String> {
     debug!("INSERT into tree: {}, key: {}", tree, key);
-    match self.trees.get_tree(tree.clone()) {
+    match self.trees.get_tree_mut(tree.clone()) {
       Some(tree) => {
-        match tree.insert(key, value.as_bytes()) {
+        match tree.insert(key.as_bytes(), value.as_bytes()) {
           // IVec as string
           Ok(v) => {
             match v {
@@ -98,7 +98,7 @@ impl Database {
     debug!("GET from tree: {}, key: {}", tree, key);
     match self.trees.get_tree(tree.clone()) {
       Some(tree) => {
-        match tree.get(key) {
+        match tree.get(key.as_bytes()) {
           Ok(Some(value)) => Some(std::str::from_utf8(&value).unwrap().to_string()),
           Ok(None) => None,
           Err(e) => {
@@ -112,11 +112,11 @@ impl Database {
   }
 
   // returns value if it exists
-  pub fn remove(&self, tree: String, key: String) -> Option<String> {
+  pub fn remove(&mut self, tree: String, key: String) -> Option<String> {
     debug!("REMOVE from tree: {}, key: {}", tree, key);
-    match self.trees.get_tree(tree.clone()) {
+    match self.trees.get_tree_mut(tree.clone()) {
       Some(tree) => {
-        match tree.remove(key) {
+        match tree.remove(key.as_bytes()) {
           Ok(v) => {
             match v {
               Some(v) => Some(std::str::from_utf8(&v).unwrap().to_string()),
