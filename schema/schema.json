@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GeneratedRootSchema",
+  "type": "object",
+  "required": [
+    "echo_event",
+    "register_request",
+    "register_response",
+    "role",
+    "role_authenticate_request"
+  ],
+  "properties": {
+    "echo_event": {
+      "$ref": "#/definitions/EchoEvent"
+    },
+    "register_request": {
+      "$ref": "#/definitions/RegisterRequest"
+    },
+    "register_response": {
+      "$ref": "#/definitions/RegisterResponse"
+    },
+    "role": {
+      "$ref": "#/definitions/Role"
+    },
+    "role_authenticate_request": {
+      "$ref": "#/definitions/RoleAuthenticateRequest"
+    }
+  },
+  "definitions": {
+    "EchoEvent": {
+      "type": "object",
+      "required": [
+        "auth_token",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/definitions/MethodType"
+        },
+        "params": {
+          "$ref": "#/definitions/MethodParameters"
+        }
+      }
+    },
+    "MethodParameters": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trees": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MethodType": {
+      "type": "string",
+      "enum": [
+        "Set",
+        "Get",
+        "Delete",
+        "Echo",
+        "Subscribe",
+        "Unsubscribe"
+      ]
+    },
+    "RegisterRequest": {
+      "type": "object",
+      "required": [
+        "echo_trees"
+      ],
+      "properties": {
+        "echo_trees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RegisterResponse": {
+      "type": "object",
+      "required": [
+        "auth_token",
+        "url",
+        "uuid"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      }
+    },
+    "Role": {
+      "description": "Role used for authentication to branches of the database",
+      "type": "object",
+      "required": [
+        "echo_trees",
+        "password",
+        "role_id"
+      ],
+      "properties": {
+        "echo_trees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "string"
+        }
+      }
+    },
+    "RoleAuthenticateRequest": {
+      "type": "object",
+      "required": [
+        "password",
+        "role_id"
+      ],
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 [workspace]
 resolver = "2"
 members = [
-  "echo-tree-rs", "schema-gen",
+  "echo_tree_rs", "common",
 ]
