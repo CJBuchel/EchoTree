@@ -105,7 +105,8 @@
         "Get",
         "Delete",
         "Checksum",
-        "Echo",
+        "EchoTree",
+        "EchoItem",
         "Subscribe",
         "Unsubscribe"
       ]

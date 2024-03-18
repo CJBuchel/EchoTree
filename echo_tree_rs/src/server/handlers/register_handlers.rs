@@ -6,12 +6,7 @@ use crate::common::{Client, Clients, EchoDB, ResponseResult};
 async fn register_client(uuid: String, auth_token:String, echo_trees: Vec<String>, role_trees: Vec<String>, clients: Clients) {
 
   debug!("registering client with uuid: {}", uuid);
-  clients.write().await.insert(uuid, Client{
-    auth_token,
-    role_trees,
-    echo_trees,
-    sender: None,
-  });
+  clients.write().await.insert(uuid, Client::new(auth_token, role_trees, echo_trees, None));
 }
 
 pub async fn register_handler(body: RegisterRequest, clients: Clients, database: EchoDB, port: u16) -> ResponseResult<impl warp::reply::Reply> {

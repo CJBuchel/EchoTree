@@ -1,11 +1,10 @@
-use protocol::schemas::socket_protocol::EchoEvent;
+use protocol::schemas::socket_protocol::{Checksum, EchoEvent};
 
 use crate::common::{Clients, EchoDB};
 
 
 pub async fn checksum_broker(uuid: String, msg: EchoEvent, clients: &Clients, db: &EchoDB) {
-  // client trees
-
+  // client tree and checksums
   let checksums = match msg.params.checksums {
     Some(c) => c,
     None => {
@@ -44,11 +43,43 @@ pub async fn checksum_broker(uuid: String, msg: EchoEvent, clients: &Clients, db
   };
 
   for stale_tree in stale_trees.iter() {
-    if client.echo_trees.contains(stale_tree) {
-      // client is subscribed to this stale tree, will send an update
-      if client.role_trees.contains(stale_tree) { // if client has access to this tree
-        // @TODO
-      }
+    // client has access to this stale tree, will send an update
+    if client.get_accessible_subscribed_trees().contains(stale_tree) {
+      // serialize tree into json and send to client
+      let tree = match read_db.get_tree_map().get_tree(stale_tree.to_string()) {
+        Some(t) => t,
+        None => {
+          log::warn!("{}: tree not found: {}", uuid, stale_tree);
+          continue;
+        }
+      };
+      
+      // convert tree to json using serde
+      let tree_json = match tree.get_json() {
+        Ok(j) => j,
+        Err(e) => {
+          log::error!("{}: get_json failed for {}: {}", uuid, stale_tree, e);
+          continue;
+        }
+      };
+  
+      // prepare echo event
+      let echo_event = EchoEvent {
+        auth_token: client.auth_token.clone(),
+        method: protocol::schemas::socket_protocol::MethodType::EchoTree,
+        params: protocol::schemas::socket_protocol::MethodParameters {
+          trees: None,
+          key: None,
+          checksums: Some(vec![Checksum {
+            tree: stale_tree.clone(),
+            checksum: tree.get_checksum(),
+          }]),
+          data: Some(tree_json),
+        },
+      };
+      
+      // send echo event to client
+      client.echo_client(echo_event);
     }
   }
 }

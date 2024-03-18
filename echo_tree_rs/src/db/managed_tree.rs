@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use sled::IVec;
 
 
@@ -87,6 +89,22 @@ impl ManagedTree {
 
   pub fn iter(&self) -> sled::Iter {
     self.tree.iter()
+  }
+
+  // get json format of tree
+  pub fn get_json(&self) -> Result<String, serde_json::Error> {
+    let mut map: HashMap<String, String> = HashMap::new();
+
+    for item in self.tree.iter() {
+      if let Ok((k, v)) = item {
+        let key_str = String::from_utf8(k.to_vec()).unwrap_or_default();
+        let value_str = String::from_utf8(v.to_vec()).unwrap_or_default();
+        map.insert(key_str, value_str);
+      }
+    }
+
+    // serialize the data to json
+    serde_json::to_string(&map)
   }
 
   pub fn name(&self) -> String {

@@ -17,13 +17,14 @@ pub struct MethodParameters {
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub enum MethodType{
   // generic methods
-  Set, // tree, key, data -> to server
-  Get, // tree, key -> to server
-  Delete, // tree, key -> to server
+  Set, // trees, key, data -> to server
+  Get, // trees, key -> to server
+  Delete, // trees, key -> to server
   Checksum, // checksums -> to server (server should send Echo if any of the checksums mismatch)
 
   // echo sync methods
-  Echo, // checksum, data <- to client
+  EchoTree, // checksum, data <- to client
+  EchoItem, // tree, key, data <- to client
   Subscribe, // tree -> to server
   Unsubscribe, // tree -> to server
 }
