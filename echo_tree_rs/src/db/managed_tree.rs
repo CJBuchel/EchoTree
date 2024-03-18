@@ -107,7 +107,23 @@ impl ManagedTree {
     serde_json::to_string(&map)
   }
 
-  pub fn name(&self) -> String {
+  pub fn get_string_data(&self, key: String) -> Result<String, sled::Error> {
+    match self.tree.get(key.as_bytes()) {
+      Ok(Some(value)) => {
+        Ok(std::str::from_utf8(&value).unwrap().to_string())
+      },
+      Ok(None) => {
+        log::warn!("{}: key not found: {}", self.tree_name, key);
+        Ok("".to_string())
+      },
+      Err(e) => {
+        log::error!("get failed: {}", e);
+        Err(e)
+      }
+    }
+  }
+
+  pub fn get_name(&self) -> String {
     self.tree_name.clone()
   }
 }

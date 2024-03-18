@@ -1,11 +1,13 @@
-use protocol::schemas::socket_protocol::{Checksum, EchoEvent};
+
+
+use protocol::schemas::socket_protocol::{EchoEvent, OperationRequest};
 
 use crate::common::{Clients, EchoDB};
 
 
-pub async fn checksum_broker(uuid: String, msg: EchoEvent, clients: &Clients, db: &EchoDB) {
+pub async fn checksum_broker(uuid: String, msg: OperationRequest, clients: &Clients, db: &EchoDB) {
   // client tree and checksums
-  let checksums = match msg.params.checksums {
+  let hash_trees = match msg.trees {
     Some(c) => c,
     None => {
       log::warn!("{}: no checksums to compare", uuid);
@@ -17,19 +19,27 @@ pub async fn checksum_broker(uuid: String, msg: EchoEvent, clients: &Clients, db
   let read_db = db.read().await;
   let mut stale_trees: Vec<String> = Vec::new();
 
-  for checksum in checksums.iter() {
-    let tree = match read_db.get_tree_map().get_tree(checksum.tree.clone()) {
+  for hash_tree in hash_trees.iter() {
+    let tree = match read_db.get_tree_map().get_tree(hash_tree.tree.clone()) {
       Some(t) => t,
       None => {
-        log::debug!("{}: tree not found: {}", uuid, checksum.tree);
+        log::debug!("{}: tree not found: {}", uuid, hash_tree.tree);
+        continue;
+      }
+    };
+
+    let checksum = match hash_tree.checksum {
+      Some(c) => c,
+      None => {
+        log::debug!("{}: checksum not found: {}", uuid, hash_tree.tree);
         continue;
       }
     };
 
     // check the tree checksum against client checksum
-    if tree.get_checksum() != checksum.checksum {
-      log::debug!("{}: tree checksum mismatch: {} != {}", uuid, tree.get_checksum(), checksum.checksum);
-      stale_trees.push(checksum.tree.clone());
+    if tree.get_checksum() != checksum {
+      log::debug!("{}: tree checksum mismatch: {} != {}", uuid, tree.get_checksum(), checksum);
+      stale_trees.push(hash_tree.tree.clone());
     }
   }
 
@@ -65,17 +75,15 @@ pub async fn checksum_broker(uuid: String, msg: EchoEvent, clients: &Clients, db
   
       // prepare echo event
       let echo_event = EchoEvent {
-        auth_token: client.auth_token.clone(),
-        method: protocol::schemas::socket_protocol::MethodType::EchoTree,
-        params: protocol::schemas::socket_protocol::MethodParameters {
-          trees: None,
-          key: None,
-          checksums: Some(vec![Checksum {
+        method: protocol::schemas::socket_protocol::EchoMethodType::EchoTree,
+        trees: Some(vec![
+          protocol::schemas::socket_protocol::HashTree {
             tree: stale_tree.clone(),
-            checksum: tree.get_checksum(),
-          }]),
-          data: Some(tree_json),
-        },
+            checksum: Some(tree.get_checksum()),
+          }
+        ]),
+        key: None,
+        data: Some(tree_json),
       };
       
       // send echo event to client

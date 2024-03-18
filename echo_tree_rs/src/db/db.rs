@@ -42,6 +42,10 @@ impl Database {
     &self.trees
   }
 
+  pub fn get_tree_map_mut(&mut self) -> &mut TreeMap {
+    &mut self.trees
+  }
+
   pub fn get_role_manager(&self) -> &RoleManager {
     &self.role_manager
   }

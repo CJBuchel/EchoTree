@@ -1,6 +1,6 @@
 use futures::{FutureExt, StreamExt};
 use log::{debug, error, info, warn};
-use protocol::schemas::socket_protocol::EchoEvent;
+use protocol::schemas::socket_protocol::OperationRequest;
 
 use crate::{common::{Client, Clients, EchoDB, ResponseResult}, server::handlers::broker::echo_message_broker};
 
@@ -37,7 +37,7 @@ async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Cli
     return;
   }
 
-  let echo_event: EchoEvent = match serde_json::from_str(message) {
+  let operation_request: OperationRequest = match serde_json::from_str(message) {
     Ok(v) => v,
     Err(e) => {
       error!("{}: {:?}", uuid, e);
@@ -46,12 +46,12 @@ async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Cli
   };
 
   // check auth code
-  if !check_client_auth(uuid.clone(), echo_event.auth_token.clone(), clients).await {
+  if !check_client_auth(uuid.clone(), operation_request.auth_token.clone(), clients).await {
     return;
   }
 
   // match the method protocol
-  echo_message_broker(uuid, echo_event, clients, db).await;
+  echo_message_broker(uuid, operation_request, clients, db).await;
 }
 
 async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clients, mut client: Client, db: EchoDB) {

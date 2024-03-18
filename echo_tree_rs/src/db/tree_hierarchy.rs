@@ -49,7 +49,7 @@ impl TreeHierarchy {
 
   // drops the hierarchy tree, not recoverable unless a new hierarchy tree is created
   pub fn drop(&self) {
-    match self.db.drop_tree(self.hierarchy.name()) {
+    match self.db.drop_tree(self.hierarchy.get_name()) {
       Ok(_) => warn!("dropped hierarchy tree"),
       Err(e) => error!("drop failed: {}", e)
     }

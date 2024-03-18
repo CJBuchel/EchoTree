@@ -1,13 +1,11 @@
 use log::debug;
-use protocol::schemas::socket_protocol::EchoEvent;
-
+use protocol::schemas::socket_protocol::OperationRequest;
 use crate::common::Clients;
 
 
-pub async fn subscribe_broker(uuid: String, msg: EchoEvent, clients: &Clients) {
-  match msg.params.trees {
+pub async fn subscribe_broker(uuid: String, msg: OperationRequest, clients: &Clients) {
+  match msg.trees {
     Some(trees) => {
-      debug!("{}: subscribing to trees: {:?}", uuid, trees);
       let mut client = match clients.read().await.get(&uuid).cloned() {
         Some(c) => c,
         None => {
@@ -18,8 +16,8 @@ pub async fn subscribe_broker(uuid: String, msg: EchoEvent, clients: &Clients) {
 
       // add only the trees the client doesn't have
       for tree in trees {
-        if !client.echo_trees.contains(&tree) {
-          client.echo_trees.push(tree.clone());
+        if !client.echo_trees.contains(&tree.tree) {
+          client.echo_trees.push(tree.tree.clone());
         }
       }
 
@@ -31,10 +29,9 @@ pub async fn subscribe_broker(uuid: String, msg: EchoEvent, clients: &Clients) {
   }
 }
 
-pub async fn unsubscribe_broker(uuid:String, msg: EchoEvent, clients: &Clients) {
-  match msg.params.trees {
+pub async fn unsubscribe_broker(uuid:String, msg: OperationRequest, clients: &Clients) {
+  match msg.trees {
     Some(trees) => {
-      debug!("{}: unsubscribing from trees: {:?}", uuid, trees);
       let mut client = match clients.read().await.get(&uuid).cloned() {
         Some(c) => c,
         None => {
@@ -45,8 +42,8 @@ pub async fn unsubscribe_broker(uuid:String, msg: EchoEvent, clients: &Clients) 
 
       // remove only the trees the client has
       for tree in trees {
-        if client.echo_trees.contains(&tree) {
-          client.echo_trees.retain(|t| t != &tree);
+        if client.echo_trees.contains(&tree.tree) {
+          client.echo_trees.retain(|t| t != &tree.tree);
         }
       }
 

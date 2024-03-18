@@ -27,54 +27,12 @@
     }
   },
   "definitions": {
-    "Checksum": {
-      "type": "object",
-      "required": [
-        "checksum",
-        "tree"
-      ],
-      "properties": {
-        "checksum": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "tree": {
-          "type": "string"
-        }
-      }
-    },
     "EchoEvent": {
       "type": "object",
       "required": [
-        "auth_token",
-        "method",
-        "params"
+        "method"
       ],
       "properties": {
-        "auth_token": {
-          "type": "string"
-        },
-        "method": {
-          "$ref": "#/definitions/MethodType"
-        },
-        "params": {
-          "$ref": "#/definitions/MethodParameters"
-        }
-      }
-    },
-    "MethodParameters": {
-      "type": "object",
-      "properties": {
-        "checksums": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Checksum"
-          }
-        },
         "data": {
           "type": [
             "string",
@@ -87,29 +45,45 @@
             "null"
           ]
         },
+        "method": {
+          "$ref": "#/definitions/EchoMethodType"
+        },
         "trees": {
           "type": [
             "array",
             "null"
           ],
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/HashTree"
           }
         }
       }
     },
-    "MethodType": {
+    "EchoMethodType": {
       "type": "string",
       "enum": [
-        "Set",
-        "Get",
-        "Delete",
-        "Checksum",
         "EchoTree",
-        "EchoItem",
-        "Subscribe",
-        "Unsubscribe"
+        "EchoItem"
       ]
+    },
+    "HashTree": {
+      "type": "object",
+      "required": [
+        "tree"
+      ],
+      "properties": {
+        "checksum": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "tree": {
+          "type": "string"
+        }
+      }
     },
     "RegisterRequest": {
       "type": "object",
