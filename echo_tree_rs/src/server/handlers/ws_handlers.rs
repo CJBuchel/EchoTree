@@ -1,6 +1,6 @@
 use futures::{FutureExt, StreamExt};
 use log::{debug, error, info, warn};
-use protocol::schemas::socket_protocol::OperationRequest;
+use protocol::schemas::socket_protocol::client_socket_protocol::EchoTreeClientSocketMessage;
 
 use crate::{common::{Client, Clients, EchoDB, ResponseResult}, server::handlers::broker::echo_message_broker};
 
@@ -37,7 +37,7 @@ async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Cli
     return;
   }
 
-  let operation_request: OperationRequest = match serde_json::from_str(message) {
+  let operation_request: EchoTreeClientSocketMessage = match serde_json::from_str(message) {
     Ok(v) => v,
     Err(e) => {
       error!("{}: {:?}", uuid, e);

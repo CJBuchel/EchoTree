@@ -4,8 +4,7 @@ use schemars::JsonSchema;
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct ChecksumEvent {
-  pub tree_names: Vec<String>, // tree names
-  pub checksums: Vec<u32>, // checksums
+  pub tree_checksums: HashMap<String, u32>, // tree name, checksum
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
@@ -29,6 +28,21 @@ pub struct SetTreeEvent {
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct GetTreeEvent {
   pub tree_names: Vec<String>, // trees
+}
+
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+pub struct DeleteEvent {
+  pub tree_names: Vec<String>, // trees
+}
+
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+pub struct SubscribeEvent {
+  pub tree_names: Vec<String>, // tree names
+}
+
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+pub struct UnsubscribeEvent {
+  pub tree_names: Vec<String>, // tree names
 }
 
 /**

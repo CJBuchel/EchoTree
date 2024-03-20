@@ -1,16 +1,33 @@
 
 use std::{fs, path::Path};
 
-use protocol::schemas::{http_protocol::{RegisterRequest, RegisterResponse, RoleAuthenticateRequest}, socket_protocol::EchoEvent, Role};
 
 #[allow(dead_code)]
 #[derive(schemars::JsonSchema)]
 struct GeneratedRootSchema {
-  role: Role,
-  register_request: RegisterRequest,
-  register_response: RegisterResponse,
-  role_authenticate_request: RoleAuthenticateRequest,
-  echo_event: EchoEvent,
+  // http protocol
+  role: protocol::schemas::Role,
+  register_request: protocol::schemas::http_protocol::RegisterRequest,
+  register_response: protocol::schemas::http_protocol::RegisterResponse,
+  role_authenticate_request: protocol::schemas::http_protocol::RoleAuthenticateRequest,
+
+  // socket protocol (message)
+  echo_tree_client_socket_message: protocol::schemas::socket_protocol::client_socket_protocol::EchoTreeClientSocketMessage,
+  echo_tree_server_socket_message: protocol::schemas::socket_protocol::server_socket_protocol::EchoTreeServerSocketMessage,
+
+  // server message protocols
+  echo_tree_event: protocol::schemas::socket_protocol::server_socket_protocol::EchoTreeEvent,
+  echo_item_event: protocol::schemas::socket_protocol::server_socket_protocol::EchoItemEvent,
+
+  // client message protocols
+  checksum_event: protocol::schemas::socket_protocol::client_socket_protocol::ChecksumEvent,
+  set_event: protocol::schemas::socket_protocol::client_socket_protocol::SetEvent,
+  get_event: protocol::schemas::socket_protocol::client_socket_protocol::GetEvent,
+  set_tree_event: protocol::schemas::socket_protocol::client_socket_protocol::SetTreeEvent,
+  get_tree_event: protocol::schemas::socket_protocol::client_socket_protocol::GetTreeEvent,
+  delete_event: protocol::schemas::socket_protocol::client_socket_protocol::DeleteEvent,
+  subscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::SubscribeEvent,
+  unsubscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::UnsubscribeEvent,
 }
 
 fn main() {

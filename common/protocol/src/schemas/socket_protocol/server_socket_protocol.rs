@@ -3,18 +3,19 @@ use std::collections::HashMap;
 use schemars::JsonSchema;
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
-pub struct ChecksumTree {
-  pub tree_name: String, // name of tree
-  pub tree: HashMap<String, String>, // tree data (key, value)
-  pub checksum: u32, // checksum of tree
+pub struct EchoTreeEventTree {
+  pub tree_name: String, // tree name
+  pub checksum: u32, // checksum of the tree (not the key/data)
+  pub tree: HashMap<String, String>, // (k, v)
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct EchoTreeEvent {
-  pub trees: Vec<ChecksumTree>, // trees
+  pub trees: Vec<EchoTreeEventTree>, // trees
 }
 
 
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct EchoItemEvent {
   pub checksum: u32, // new checksum of the tree (not the key/data)
   pub tree_name: String, // tree name

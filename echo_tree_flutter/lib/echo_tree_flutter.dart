@@ -92,7 +92,7 @@ class EchoTreeClient {
     }
   }
 
-  void sendMessage(EchoEvent m) {
+  void sendMessage(EchoTreeClientSocketMessage m) {
     if (_channel != null) {
       _channel!.sink.add(jsonEncode(m.toJson()));
     }

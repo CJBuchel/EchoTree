@@ -1,5 +1,5 @@
 use log::{debug, error};
-use protocol::schemas::socket_protocol::EchoEvent;
+use protocol::schemas::socket_protocol::server_socket_protocol::EchoTreeServerSocketMessage;
 use tokio::sync::mpsc;
 use warp::{filters::ws::Message, Filter};
 
@@ -64,7 +64,7 @@ impl Client {
     }
   }
 
-  pub fn echo_client(&self, msg: EchoEvent) {
+  pub fn echo_client(&self, msg: EchoTreeServerSocketMessage) {
     let json = match serde_json::to_string(&msg) {
       Ok(j) => j,
       Err(e) => {

@@ -3,15 +3,47 @@
   "title": "GeneratedRootSchema",
   "type": "object",
   "required": [
-    "echo_event",
+    "checksum_event",
+    "delete_event",
+    "echo_item_event",
+    "echo_tree_client_socket_message",
+    "echo_tree_event",
+    "echo_tree_server_socket_message",
+    "get_event",
+    "get_tree_event",
     "register_request",
     "register_response",
     "role",
-    "role_authenticate_request"
+    "role_authenticate_request",
+    "set_event",
+    "set_tree_event",
+    "subscribe_event",
+    "unsubscribe_event"
   ],
   "properties": {
-    "echo_event": {
-      "$ref": "#/definitions/EchoEvent"
+    "checksum_event": {
+      "$ref": "#/definitions/ChecksumEvent"
+    },
+    "delete_event": {
+      "$ref": "#/definitions/DeleteEvent"
+    },
+    "echo_item_event": {
+      "$ref": "#/definitions/EchoItemEvent"
+    },
+    "echo_tree_client_socket_message": {
+      "$ref": "#/definitions/EchoTreeClientSocketMessage"
+    },
+    "echo_tree_event": {
+      "$ref": "#/definitions/EchoTreeEvent"
+    },
+    "echo_tree_server_socket_message": {
+      "$ref": "#/definitions/EchoTreeServerSocketMessage"
+    },
+    "get_event": {
+      "$ref": "#/definitions/GetEvent"
+    },
+    "get_tree_event": {
+      "$ref": "#/definitions/GetTreeEvent"
     },
     "register_request": {
       "$ref": "#/definitions/RegisterRequest"
@@ -24,64 +56,208 @@
     },
     "role_authenticate_request": {
       "$ref": "#/definitions/RoleAuthenticateRequest"
+    },
+    "set_event": {
+      "$ref": "#/definitions/SetEvent"
+    },
+    "set_tree_event": {
+      "$ref": "#/definitions/SetTreeEvent"
+    },
+    "subscribe_event": {
+      "$ref": "#/definitions/SubscribeEvent"
+    },
+    "unsubscribe_event": {
+      "$ref": "#/definitions/UnsubscribeEvent"
     }
   },
   "definitions": {
-    "EchoEvent": {
+    "ChecksumEvent": {
       "type": "object",
       "required": [
-        "method"
+        "tree_checksums"
       ],
       "properties": {
-        "data": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "key": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "method": {
-          "$ref": "#/definitions/EchoMethodType"
-        },
-        "trees": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/HashTree"
+        "tree_checksums": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
           }
         }
       }
     },
-    "EchoMethodType": {
-      "type": "string",
-      "enum": [
-        "EchoTree",
-        "EchoItem"
-      ]
-    },
-    "HashTree": {
+    "DeleteEvent": {
       "type": "object",
       "required": [
-        "tree"
+        "tree_names"
+      ],
+      "properties": {
+        "tree_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EchoItemEvent": {
+      "type": "object",
+      "required": [
+        "checksum",
+        "data",
+        "key",
+        "tree_name"
       ],
       "properties": {
         "checksum": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "data": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "tree_name": {
+          "type": "string"
+        }
+      }
+    },
+    "EchoTreeClientSocketEvent": {
+      "description": "Echo Tree Client Socket Event dictates the message structure, i.e: - PingEvent: (no message) - ChecksumEvent: tree names, checksums - SetEvent: tree, key, data - GetEvent: tree, key etc...",
+      "type": "string",
+      "enum": [
+        "PingEvent",
+        "ChecksumEvent",
+        "SetEvent",
+        "GetEvent",
+        "SetTreeEvent",
+        "GetTreeEvent",
+        "DeleteEvent",
+        "SubscribeEvent",
+        "UnsubscribeEvent"
+      ]
+    },
+    "EchoTreeClientSocketMessage": {
+      "description": "Echo Tree Client Socket Message message to be sent to the server (json data, represented by the event type)",
+      "type": "object",
+      "required": [
+        "auth_token",
+        "message_event"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "message": {
           "type": [
-            "integer",
+            "string",
             "null"
-          ],
+          ]
+        },
+        "message_event": {
+          "$ref": "#/definitions/EchoTreeClientSocketEvent"
+        }
+      }
+    },
+    "EchoTreeEvent": {
+      "type": "object",
+      "required": [
+        "trees"
+      ],
+      "properties": {
+        "trees": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EchoTreeEventTree"
+          }
+        }
+      }
+    },
+    "EchoTreeEventTree": {
+      "type": "object",
+      "required": [
+        "checksum",
+        "tree",
+        "tree_name"
+      ],
+      "properties": {
+        "checksum": {
+          "type": "integer",
           "format": "uint32",
           "minimum": 0.0
         },
         "tree": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "tree_name": {
           "type": "string"
+        }
+      }
+    },
+    "EchoTreeServerSocketEvent": {
+      "description": "Echo Tree Event dictates the message structure, i.e: - PingEvent: (no message) - EchoTreeEvent: trees, data - EchoItemEvent: tree, key, data etc...",
+      "type": "string",
+      "enum": [
+        "PingEvent",
+        "EchoTreeEvent",
+        "EchoItemEvent"
+      ]
+    },
+    "EchoTreeServerSocketMessage": {
+      "description": "Echo Tree Server Socket Message message to be sent to the client (json data, represented by the event type)",
+      "type": "object",
+      "required": [
+        "auth_token",
+        "message_event"
+      ],
+      "properties": {
+        "auth_token": {
+          "type": "string"
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message_event": {
+          "$ref": "#/definitions/EchoTreeServerSocketEvent"
+        }
+      }
+    },
+    "GetEvent": {
+      "type": "object",
+      "required": [
+        "key",
+        "tree_name"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "tree_name": {
+          "type": "string"
+        }
+      }
+    },
+    "GetTreeEvent": {
+      "type": "object",
+      "required": [
+        "tree_names"
+      ],
+      "properties": {
+        "tree_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -165,6 +341,70 @@
         },
         "role_id": {
           "type": "string"
+        }
+      }
+    },
+    "SetEvent": {
+      "type": "object",
+      "required": [
+        "data",
+        "key",
+        "tree_name"
+      ],
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "tree_name": {
+          "type": "string"
+        }
+      }
+    },
+    "SetTreeEvent": {
+      "type": "object",
+      "required": [
+        "trees"
+      ],
+      "properties": {
+        "trees": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "SubscribeEvent": {
+      "type": "object",
+      "required": [
+        "tree_names"
+      ],
+      "properties": {
+        "tree_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "UnsubscribeEvent": {
+      "type": "object",
+      "required": [
+        "tree_names"
+      ],
+      "properties": {
+        "tree_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

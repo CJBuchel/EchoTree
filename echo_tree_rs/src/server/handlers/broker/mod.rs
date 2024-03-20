@@ -1,5 +1,5 @@
 use log::warn;
-use protocol::schemas::socket_protocol::{OperationRequest, OperationMethodType};
+use protocol::schemas::socket_protocol::client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage};
 
 use crate::common::{Clients, EchoDB};
 
@@ -11,23 +11,23 @@ mod data_modifier_broker;
  * Broker for the echo message
  * Breakout for each echo message method
  */
-pub async fn echo_message_broker(uuid:String, msg: OperationRequest, clients: &Clients, db: &EchoDB) {
-  match msg.method {
-    OperationMethodType::Subscribe => {
+pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
+  match msg.message_event {
+    EchoTreeClientSocketEvent::SubscribeEvent => {
       subscription_broker::subscribe_broker(uuid, msg, clients).await;
     },
-    OperationMethodType::Unsubscribe => {
+    EchoTreeClientSocketEvent::UnsubscribeEvent => {
       subscription_broker::unsubscribe_broker(uuid, msg, clients).await;
     },
-    OperationMethodType::Checksum => {
+    EchoTreeClientSocketEvent::ChecksumEvent => {
       checksum_broker::checksum_broker(uuid, msg, clients, db).await;
     },
-    OperationMethodType::Set => {
-      data_modifier_broker::set_broker(uuid, msg, clients, db).await;
-    },
-    OperationMethodType::Get => {
-      data_modifier_broker::get_broker(uuid, msg, clients, db).await;
-    },
+    // EchoTreeClientSocketEvent::SetEvent => {
+    //   data_modifier_broker::set_broker(uuid, msg, clients, db).await;
+    // },
+    // EchoTreeClientSocketEvent::GetEvent => {
+    //   data_modifier_broker::get_broker(uuid, msg, clients, db).await;
+    // },
     _ => {
       warn!("{}: unhandled method", uuid);
     },

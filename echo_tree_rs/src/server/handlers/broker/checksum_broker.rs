@@ -1,49 +1,20 @@
-
-
-use protocol::schemas::socket_protocol::{EchoEvent, OperationRequest};
+use protocol::schemas::socket_protocol::{client_socket_protocol::{ChecksumEvent, EchoTreeClientSocketMessage}, server_socket_protocol::{EchoTreeEvent, EchoTreeEventTree, EchoTreeServerSocketEvent, EchoTreeServerSocketMessage}};
 
 use crate::common::{Clients, EchoDB};
 
 
-pub async fn checksum_broker(uuid: String, msg: OperationRequest, clients: &Clients, db: &EchoDB) {
-  // client tree and checksums
-  let hash_trees = match msg.trees {
-    Some(c) => c,
-    None => {
-      log::warn!("{}: no checksums to compare", uuid);
+pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
+  let msg: ChecksumEvent = match serde_json::from_str(&msg.message.unwrap_or("".to_string())) {
+    Ok(v) => v,
+    Err(e) => {
+      log::error!("{}: {:?}", uuid, e);
       return;
     }
   };
 
   // check the checksums against the db trees
   let read_db = db.read().await;
-  let mut stale_trees: Vec<String> = Vec::new();
 
-  for hash_tree in hash_trees.iter() {
-    let tree = match read_db.get_tree_map().get_tree(hash_tree.tree.clone()) {
-      Some(t) => t,
-      None => {
-        log::debug!("{}: tree not found: {}", uuid, hash_tree.tree);
-        continue;
-      }
-    };
-
-    let checksum = match hash_tree.checksum {
-      Some(c) => c,
-      None => {
-        log::debug!("{}: checksum not found: {}", uuid, hash_tree.tree);
-        continue;
-      }
-    };
-
-    // check the tree checksum against client checksum
-    if tree.get_checksum() != checksum {
-      log::debug!("{}: tree checksum mismatch: {} != {}", uuid, tree.get_checksum(), checksum);
-      stale_trees.push(hash_tree.tree.clone());
-    }
-  }
-
-  // find the matching trees for the client
   let client = match clients.read().await.get(&uuid) {
     Some(c) => c.clone(),
     None => {
@@ -52,42 +23,37 @@ pub async fn checksum_broker(uuid: String, msg: OperationRequest, clients: &Clie
     }
   };
 
-  for stale_tree in stale_trees.iter() {
-    // client has access to this stale tree, will send an update
-    if client.get_accessible_subscribed_trees().contains(stale_tree) {
-      // serialize tree into json and send to client
-      let tree = match read_db.get_tree_map().get_tree(stale_tree.to_string()) {
-        Some(t) => t,
-        None => {
-          log::warn!("{}: tree not found: {}", uuid, stale_tree);
-          continue;
-        }
-      };
+  let new_client_trees: Vec<EchoTreeEventTree> = msg.tree_checksums.iter().filter_map(|(tree_name, checksum)| { // filter_map is a combination of filter and map
+    let tree = read_db.get_tree_map().get_tree(tree_name.to_string())?;
+    if tree.get_checksum() != *checksum { // if the tree checksum does not match the checksum from the client
+      log::debug!("{}: tree checksum mismatch: {} != {}", uuid, tree.get_checksum(), checksum);
       
-      // convert tree to json using serde
-      let tree_json = match tree.get_json() {
-        Ok(j) => j,
-        Err(e) => {
-          log::error!("{}: get_json failed for {}: {}", uuid, stale_tree, e);
-          continue;
-        }
-      };
-  
-      // prepare echo event
-      let echo_event = EchoEvent {
-        method: protocol::schemas::socket_protocol::EchoMethodType::EchoTree,
-        trees: Some(vec![
-          protocol::schemas::socket_protocol::HashTree {
-            tree: stale_tree.clone(),
-            checksum: Some(tree.get_checksum()),
-          }
-        ]),
-        key: None,
-        data: Some(tree_json),
-      };
-      
-      // send echo event to client
-      client.echo_client(echo_event);
+      if client.get_accessible_subscribed_trees().contains(tree_name) { // if the client has access to the tree
+        let tree_hashmap = tree.get_as_hashmap().ok()?;
+        Some(EchoTreeEventTree { // return the tree name, the new tree as a hashmap, and the new tree checksum
+          tree_name: tree_name.clone(),
+          tree: tree_hashmap,
+          checksum: tree.get_checksum(),
+        })
+      } else {
+        None
+      }
+    } else {
+      None
     }
-  }
+  }).collect();
+
+  let echo_tree_event = EchoTreeEvent {
+    trees: new_client_trees,
+  };
+
+  // prepare echo event
+  let echo_event = EchoTreeServerSocketMessage {
+    auth_token: client.auth_token.clone(),
+    message_event: EchoTreeServerSocketEvent::EchoTreeEvent,
+    message: Some(serde_json::to_string(&echo_tree_event).unwrap_or_default()),
+  };
+  
+  // send echo event to client
+  client.echo_client(echo_event);
 }

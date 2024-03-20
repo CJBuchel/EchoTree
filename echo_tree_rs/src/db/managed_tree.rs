@@ -91,17 +91,29 @@ impl ManagedTree {
     self.tree.iter()
   }
 
-  // get json format of tree
-  pub fn get_json(&self) -> Result<String, serde_json::Error> {
+  pub fn get_as_hashmap(&self) -> Result<HashMap<String, String>, sled::Error> {
     let mut map: HashMap<String, String> = HashMap::new();
 
     for item in self.tree.iter() {
-      if let Ok((k, v)) = item {
-        let key_str = String::from_utf8(k.to_vec()).unwrap_or_default();
-        let value_str = String::from_utf8(v.to_vec()).unwrap_or_default();
-        map.insert(key_str, value_str);
-      }
+      let (k, v) = match item {
+        Ok((k, v)) => (k, v),
+        Err(e) => {
+          log::error!("iter failed: {}", e);
+          return Err(e);
+        }
+      };
+
+      let key_str = String::from_utf8(k.to_vec()).unwrap_or_default();
+      let value_str = String::from_utf8(v.to_vec()).unwrap_or_default();
+      map.insert(key_str, value_str);
     }
+
+    Ok(map)
+  }
+
+  // get json format of tree
+  pub fn get_as_json(&self) -> Result<String, serde_json::Error> {
+    let map = self.get_as_hashmap().unwrap_or_default();
 
     // serialize the data to json
     serde_json::to_string(&map)

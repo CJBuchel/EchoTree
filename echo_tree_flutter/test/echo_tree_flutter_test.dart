@@ -13,15 +13,15 @@ void main() async {
 
   // test echo message
 
-  EchoEvent echoEvent = EchoEvent(
-    authToken: client.getAuthToken(),
-    method: MethodType.SUBSCRIBE,
-    params: MethodParameters(
-      trees: ["test_from_flutter"],
-    ),
-  );
+  // EchoEvent echoEvent = EchoEvent(
+  //   authToken: client.getAuthToken(),
+  //   method: MethodType.SUBSCRIBE,
+  //   params: MethodParameters(
+  //     trees: ["test_from_flutter"],
+  //   ),
+  // );
 
-  client.sendMessage(echoEvent);
+  // client.sendMessage(echoEvent);
 
   test('Test', () {});
 }
