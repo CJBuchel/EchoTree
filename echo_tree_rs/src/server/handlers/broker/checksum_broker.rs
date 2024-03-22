@@ -1,20 +1,10 @@
-use protocol::schemas::socket_protocol::{client_socket_protocol::{ChecksumEvent, EchoTreeClientSocketMessage}, server_socket_protocol::{EchoTreeEvent, EchoTreeEventTree, EchoTreeServerSocketEvent, EchoTreeServerSocketMessage}};
+use protocol::schemas::socket_protocol::{client_socket_protocol::{ChecksumEvent, EchoTreeClientSocketEvent, EchoTreeClientSocketMessage}, server_socket_protocol::{EchoTreeEvent, EchoTreeEventTree, EchoTreeServerSocketEvent, EchoTreeServerSocketMessage, StatusResponseEvent}};
 
 use crate::common::{Clients, EchoDB};
 
 
 pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
-  let msg: ChecksumEvent = match serde_json::from_str(&msg.message.unwrap_or("".to_string())) {
-    Ok(v) => v,
-    Err(e) => {
-      log::error!("{}: {:?}", uuid, e);
-      return;
-    }
-  };
-
-  // check the checksums against the db trees
-  let read_db = db.read().await;
-
+  
   let client = match clients.read().await.get(&uuid) {
     Some(c) => c.clone(),
     None => {
@@ -22,6 +12,22 @@ pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
       return;
     }
   };
+  
+  let msg: ChecksumEvent = match serde_json::from_str(&msg.message.unwrap_or("".to_string())) {
+    Ok(v) => v,
+    Err(e) => {
+      log::error!("{}: {:?}", uuid, e);
+      client.respond(StatusResponseEvent {
+        status_code: warp::http::StatusCode::BAD_REQUEST.as_u16(),
+        from_event: Some(EchoTreeClientSocketEvent::ChecksumEvent),
+        message: Some(format!("{:?}", e)),
+      });
+      return;
+    }
+  };
+
+  // check the checksums against the db trees
+  let read_db = db.read().await;
 
   let new_client_trees: Vec<EchoTreeEventTree> = msg.tree_checksums.iter().filter_map(|(tree_name, checksum)| { // filter_map is a combination of filter and map
     let tree = read_db.get_tree_map().get_tree(tree_name.to_string())?;
@@ -56,4 +62,10 @@ pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
   
   // send echo event to client
   client.echo_client(echo_event);
+
+  client.respond(StatusResponseEvent {
+    status_code: warp::http::StatusCode::OK.as_u16(),
+    from_event: Some(EchoTreeClientSocketEvent::ChecksumEvent),
+    message: Some("checksums checked".to_string()),
+  });
 }

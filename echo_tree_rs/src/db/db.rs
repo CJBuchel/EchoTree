@@ -64,26 +64,26 @@ impl Database {
     self.role_manager.drop();
   }
 
-  pub fn add_tree(&mut self, tree: String, schema: String) {
-    self.hierarchy.insert_schema(tree.clone(), schema);
-    self.trees.open_tree(tree);
+  pub fn add_tree(&mut self, tree_name: String, schema: String) {
+    self.hierarchy.insert_schema(tree_name.clone(), schema);
+    self.trees.open_tree(tree_name);
   }
 
-  pub fn remove_tree(&mut self, tree: String) {
-    self.hierarchy.remove_schema(tree.clone());
-    self.trees.remove_tree(tree);
+  pub fn remove_tree(&mut self, tree_name: String) {
+    self.hierarchy.remove_schema(tree_name.clone());
+    self.trees.remove_tree(tree_name);
   }
 
   // returns value if it exists
-  pub fn insert(&mut self, tree: String, key: String, value: String) -> Option<String> {
-    debug!("INSERT into tree: {}, key: {}", tree, key);
-    match self.trees.get_tree_mut(tree.clone()) {
+  pub fn insert(&mut self, tree_name: String, key: String, value: String) -> Option<String> {
+    debug!("INSERT into tree: {}, key: {}", tree_name, key);
+    match self.trees.get_tree_mut(tree_name.clone()) {
       Some(tree) => {
         match tree.insert(key.as_bytes(), value.as_bytes()) {
           // IVec as string
           Ok(v) => {
             match v {
-              Some(v) => Some(std::str::from_utf8(&v).unwrap().to_string()),
+              Some(v) => Some(std::str::from_utf8(&v).unwrap_or_default().to_string()),
               None => None
             }
           },
@@ -98,9 +98,9 @@ impl Database {
   }
 
   // returns value if it exists
-  pub fn get(&self, tree: String, key: String) -> Option<String> {
-    debug!("GET from tree: {}, key: {}", tree, key);
-    match self.trees.get_tree(tree.clone()) {
+  pub fn get(&self, tree_name: String, key: String) -> Option<String> {
+    debug!("GET from tree: {}, key: {}", tree_name, key);
+    match self.trees.get_tree(tree_name.clone()) {
       Some(tree) => {
         match tree.get(key.as_bytes()) {
           Ok(Some(value)) => Some(std::str::from_utf8(&value).unwrap().to_string()),
@@ -116,9 +116,9 @@ impl Database {
   }
 
   // returns value if it exists
-  pub fn remove(&mut self, tree: String, key: String) -> Option<String> {
-    debug!("REMOVE from tree: {}, key: {}", tree, key);
-    match self.trees.get_tree_mut(tree.clone()) {
+  pub fn remove(&mut self, tree_name: String, key: String) -> Option<String> {
+    debug!("REMOVE from tree: {}, key: {}", tree_name, key);
+    match self.trees.get_tree_mut(tree_name.clone()) {
       Some(tree) => {
         match tree.remove(key.as_bytes()) {
           Ok(v) => {

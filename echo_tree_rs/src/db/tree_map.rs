@@ -64,24 +64,36 @@ impl TreeMap {
     self.tree_map.insert(tree, managed_tree);
   }
 
-  pub fn remove_tree(&mut self, tree: String) {
+  pub fn remove_tree(&mut self, tree: String) -> Option<ManagedTree> {
     if !self.tree_map.contains_key(&tree) {
       warn!("tree does not exist: {}", tree);
+      return None
     }
 
     if tree.starts_with(self.metadata_path.as_str()) {
       warn!("metadata trees are forbidden: {}", tree);
-      return
+      return None
     }
 
-    match self.tree_map.get_mut(&tree) {
-      Some(t) => {
-        let _ = t.drop();
-      },
-      None => ()
+    let managed_tree = match self.tree_map.get_mut(&tree) {
+      Some(t) => t,
+      None => {
+        warn!("tree not found: {}", tree);
+        return None
+      }
     };
-    
+
+    let cloned_tree = managed_tree.clone();
+    match managed_tree.drop() {
+      Ok(_) => (),
+      Err(e) => {
+        error!("drop_tree failed for {}: {}", tree, e);
+        return None
+      }
+    };
     self.tree_map.remove(&tree);
+
+    Some(cloned_tree)
   }
 
   pub fn get_tree(&self, tree: String) -> Option<&ManagedTree> {

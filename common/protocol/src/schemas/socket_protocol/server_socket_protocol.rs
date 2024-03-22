@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use schemars::JsonSchema;
 
+use super::client_socket_protocol::EchoTreeClientSocketEvent;
+
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct EchoTreeEventTree {
   pub tree_name: String, // tree name
@@ -23,6 +25,12 @@ pub struct EchoItemEvent {
   pub data: String, // data
 }
 
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+pub struct StatusResponseEvent {
+  pub status_code: u16, // error code (should be http status code)
+  pub from_event: Option<EchoTreeClientSocketEvent>, // what the response is from (i.e, response from SetEvent)
+  pub message: Option<String>, // error message
+}
 
 /**
  * Echo Tree Event
@@ -37,6 +45,9 @@ pub enum EchoTreeServerSocketEvent {
   PingEvent, // (no message)
   EchoTreeEvent, // trees, data
   EchoItemEvent, // tree, key, data
+
+  // option events
+  StatusResponseEvent, // status code, message
 }
 
 

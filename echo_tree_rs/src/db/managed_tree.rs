@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use sled::IVec;
 
 
+#[derive(Debug, Clone)]
 pub struct ManagedTree {
   db: sled::Db,
   tree_name: String,
@@ -89,6 +90,19 @@ impl ManagedTree {
 
   pub fn iter(&self) -> sled::Iter {
     self.tree.iter()
+  }
+
+  pub fn set_from_hashmap(&mut self, map: HashMap<String, String>) -> Result<(), sled::Error> {
+    self.clear()?;
+
+    for (k, v) in map.iter() {
+      self.insert(k.as_bytes(), v.as_bytes())?;
+    }
+
+    // recalculate the checksum
+    self.checksum();
+
+    Ok(())
   }
 
   pub fn get_as_hashmap(&self) -> Result<HashMap<String, String>, sled::Error> {

@@ -13,6 +13,7 @@
     "get_tree_event",
     "register_request",
     "register_response",
+    "response_event",
     "role",
     "role_authenticate_request",
     "set_event",
@@ -51,6 +52,9 @@
     "register_response": {
       "$ref": "#/definitions/RegisterResponse"
     },
+    "response_event": {
+      "$ref": "#/definitions/StatusResponseEvent"
+    },
     "role": {
       "$ref": "#/definitions/Role"
     },
@@ -58,7 +62,7 @@
       "$ref": "#/definitions/RoleAuthenticateRequest"
     },
     "set_event": {
-      "$ref": "#/definitions/SetEvent"
+      "$ref": "#/definitions/InsertEvent"
     },
     "set_tree_event": {
       "$ref": "#/definitions/SetTreeEvent"
@@ -90,12 +94,12 @@
     "DeleteEvent": {
       "type": "object",
       "required": [
-        "tree_names"
+        "tree_items"
       ],
       "properties": {
-        "tree_names": {
-          "type": "array",
-          "items": {
+        "tree_items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "string"
           }
         }
@@ -130,13 +134,12 @@
       "description": "Echo Tree Client Socket Event dictates the message structure, i.e: - PingEvent: (no message) - ChecksumEvent: tree names, checksums - SetEvent: tree, key, data - GetEvent: tree, key etc...",
       "type": "string",
       "enum": [
-        "PingEvent",
         "ChecksumEvent",
-        "SetEvent",
+        "InsertEvent",
         "GetEvent",
+        "DeleteEvent",
         "SetTreeEvent",
         "GetTreeEvent",
-        "DeleteEvent",
         "SubscribeEvent",
         "UnsubscribeEvent"
       ]
@@ -207,7 +210,8 @@
       "enum": [
         "PingEvent",
         "EchoTreeEvent",
-        "EchoItemEvent"
+        "EchoItemEvent",
+        "StatusResponseEvent"
       ]
     },
     "EchoTreeServerSocketMessage": {
@@ -258,6 +262,25 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "InsertEvent": {
+      "type": "object",
+      "required": [
+        "data",
+        "key",
+        "tree_name"
+      ],
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "tree_name": {
+          "type": "string"
         }
       }
     },
@@ -344,25 +367,6 @@
         }
       }
     },
-    "SetEvent": {
-      "type": "object",
-      "required": [
-        "data",
-        "key",
-        "tree_name"
-      ],
-      "properties": {
-        "data": {
-          "type": "string"
-        },
-        "key": {
-          "type": "string"
-        },
-        "tree_name": {
-          "type": "string"
-        }
-      }
-    },
     "SetTreeEvent": {
       "type": "object",
       "required": [
@@ -377,6 +381,35 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "StatusResponseEvent": {
+      "type": "object",
+      "required": [
+        "status_code"
+      ],
+      "properties": {
+        "from_event": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EchoTreeClientSocketEvent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status_code": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
         }
       }
     },

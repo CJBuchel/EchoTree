@@ -8,7 +8,7 @@ pub struct ChecksumEvent {
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
-pub struct SetEvent {
+pub struct InsertEvent {
   pub tree_name: String, // tree name
   pub key: String, // key name
   pub data: String, // data
@@ -21,17 +21,17 @@ pub struct GetEvent {
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+pub struct DeleteEvent {
+  pub tree_items: HashMap<String, String>, // tree name, key
+}
+
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct SetTreeEvent {
   pub trees: HashMap<String, HashMap<String, String>>, // tree name, (k, v)
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct GetTreeEvent {
-  pub tree_names: Vec<String>, // trees
-}
-
-#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
-pub struct DeleteEvent {
   pub tree_names: Vec<String>, // trees
 }
 
@@ -57,15 +57,15 @@ pub struct UnsubscribeEvent {
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub enum EchoTreeClientSocketEvent {
   // option events
-  PingEvent, // (no message)
   ChecksumEvent, // tree names, checksums
 
-  // data events
-  SetEvent, // tree, key, data
+  // data item events
+  InsertEvent, // tree, key, data
   GetEvent, // tree, key
+  DeleteEvent, // trees, keys
+  // data tree events
   SetTreeEvent, // trees, data
   GetTreeEvent, // trees
-  DeleteEvent, // trees
 
   // subscription events
   SubscribeEvent, // tree name

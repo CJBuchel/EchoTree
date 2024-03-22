@@ -1,5 +1,5 @@
 use log::{debug, error};
-use protocol::schemas::socket_protocol::server_socket_protocol::EchoTreeServerSocketMessage;
+use protocol::schemas::socket_protocol::server_socket_protocol::{EchoTreeServerSocketEvent, EchoTreeServerSocketMessage, StatusResponseEvent};
 use tokio::sync::mpsc;
 use warp::{filters::ws::Message, Filter};
 
@@ -44,6 +44,7 @@ impl Client {
     }
   }
 
+  // get the intersection of role_trees and echo_trees
   pub fn get_accessible_subscribed_trees(&self) -> Vec<String> {
     // get the intersection of role_trees and echo_trees
     self.role_trees
@@ -53,8 +54,8 @@ impl Client {
       .collect()
   }
 
+  // send a message to the client
   pub fn send_message(&self, msg: String) {
-    // @TODO
     // send message to client
     if let Some(sender) = &self.sender {
       match sender.send(Ok(Message::text(msg))) {
@@ -64,6 +65,7 @@ impl Client {
     }
   }
 
+  // send an echo event to the client
   pub fn echo_client(&self, msg: EchoTreeServerSocketMessage) {
     let json = match serde_json::to_string(&msg) {
       Ok(j) => j,
@@ -74,5 +76,21 @@ impl Client {
     };
 
     self.send_message(json);
+  }
+
+  pub fn respond(&self, res: StatusResponseEvent) {
+    let echo_message = EchoTreeServerSocketMessage {
+      auth_token: self.auth_token.clone(),
+      message_event: EchoTreeServerSocketEvent::StatusResponseEvent,
+      message: Some(serde_json::to_string(&res).unwrap_or_default()),
+    };
+
+    self.echo_client(echo_message);
+  }
+
+  // check if this client has access to a tree
+  pub fn can_access_tree(&self, tree: &str) -> bool {
+    // access is based on file system standards. If a user has access to `/a/` then they have access to `/a/b/` but not /b/
+    self.role_trees.iter().any(|t| tree.starts_with(t))
   }
 }

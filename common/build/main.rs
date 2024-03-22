@@ -18,14 +18,17 @@ struct GeneratedRootSchema {
   // server message protocols
   echo_tree_event: protocol::schemas::socket_protocol::server_socket_protocol::EchoTreeEvent,
   echo_item_event: protocol::schemas::socket_protocol::server_socket_protocol::EchoItemEvent,
+  response_event: protocol::schemas::socket_protocol::server_socket_protocol::StatusResponseEvent,
 
   // client message protocols
   checksum_event: protocol::schemas::socket_protocol::client_socket_protocol::ChecksumEvent,
-  set_event: protocol::schemas::socket_protocol::client_socket_protocol::SetEvent,
+  set_event: protocol::schemas::socket_protocol::client_socket_protocol::InsertEvent,
   get_event: protocol::schemas::socket_protocol::client_socket_protocol::GetEvent,
+  delete_event: protocol::schemas::socket_protocol::client_socket_protocol::DeleteEvent,
+
   set_tree_event: protocol::schemas::socket_protocol::client_socket_protocol::SetTreeEvent,
   get_tree_event: protocol::schemas::socket_protocol::client_socket_protocol::GetTreeEvent,
-  delete_event: protocol::schemas::socket_protocol::client_socket_protocol::DeleteEvent,
+
   subscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::SubscribeEvent,
   unsubscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::UnsubscribeEvent,
 }
