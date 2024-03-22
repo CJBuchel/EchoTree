@@ -208,9 +208,9 @@
       "description": "Echo Tree Event dictates the message structure, i.e: - PingEvent: (no message) - EchoTreeEvent: trees, data - EchoItemEvent: tree, key, data etc...",
       "type": "string",
       "enum": [
-        "PingEvent",
         "EchoTreeEvent",
         "EchoItemEvent",
+        "PingEvent",
         "StatusResponseEvent"
       ]
     },

@@ -4,14 +4,14 @@ use schemars::JsonSchema;
 
 use super::client_socket_protocol::EchoTreeClientSocketEvent;
 
-#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema, Clone)]
 pub struct EchoTreeEventTree {
   pub tree_name: String, // tree name
   pub checksum: u32, // checksum of the tree (not the key/data)
   pub tree: HashMap<String, String>, // (k, v)
 }
 
-#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema, Clone)]
 pub struct EchoTreeEvent {
   pub trees: Vec<EchoTreeEventTree>, // trees
 }
@@ -42,11 +42,12 @@ pub struct StatusResponseEvent {
  */
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
 pub enum EchoTreeServerSocketEvent {
-  PingEvent, // (no message)
+  // echo events
   EchoTreeEvent, // trees, data
   EchoItemEvent, // tree, key, data
-
+  
   // option events
+  PingEvent, // (no message)
   StatusResponseEvent, // status code, message
 }
 

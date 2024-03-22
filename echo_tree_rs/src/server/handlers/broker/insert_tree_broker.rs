@@ -28,38 +28,9 @@ pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
     }
   };
 
-  // check if client has access to the tree
-  let tree_names: Vec<String> = msg.trees.iter().map(|(t, _)| t).cloned().collect();
-  let unauthorized_trees: Vec<String> = tree_names
-    .iter()
-    .filter(|tree| !client.can_access_tree(tree))
-    .cloned()
-    .collect();
-
-  if unauthorized_trees.len() > 0 {
-    log::debug!(
-      "{}: client does not have access to trees: {:?}",
-      uuid,
-      unauthorized_trees
-    );
-    client.respond(StatusResponseEvent {
-      status_code: warp::http::StatusCode::UNAUTHORIZED.as_u16(),
-      from_event: Some(EchoTreeClientSocketEvent::SetTreeEvent),
-      message: Some(format!(
-        "client does not have access to trees: {:?}",
-        unauthorized_trees
-      )),
-    });
-    return;
-  }
-
   // create list of tree names the client is trying to access
   let tree_names: Vec<String> = msg.trees.iter().map(|(t, _)| t.clone()).collect();
-  let unauthorized_tree_names: Vec<String> = tree_names
-    .iter()
-    .filter(|tree| !client.can_access_tree(tree))
-    .cloned()
-    .collect();
+  let unauthorized_tree_names: Vec<String> = client.get_unauthorized_trees(tree_names.clone());
 
   // access db and set trees the client has access to
   let mut write_db = db.write().await;

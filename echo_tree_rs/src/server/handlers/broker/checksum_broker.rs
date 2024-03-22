@@ -4,7 +4,6 @@ use crate::common::{Clients, EchoDB};
 
 
 pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
-  
   let client = match clients.read().await.get(&uuid) {
     Some(c) => c.clone(),
     None => {
