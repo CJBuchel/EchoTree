@@ -19,9 +19,10 @@ class Schema {
     GetTreeEvent getTreeEvent;
     RegisterRequest registerRequest;
     RegisterResponse registerResponse;
+    StatusResponseEvent responseEvent;
     Role role;
     RoleAuthenticateRequest roleAuthenticateRequest;
-    SetEvent setEvent;
+    InsertEvent setEvent;
     SetTreeEvent setTreeEvent;
     SubscribeEvent subscribeEvent;
     UnsubscribeEvent unsubscribeEvent;
@@ -37,6 +38,7 @@ class Schema {
         required this.getTreeEvent,
         required this.registerRequest,
         required this.registerResponse,
+        required this.responseEvent,
         required this.role,
         required this.roleAuthenticateRequest,
         required this.setEvent,
@@ -56,9 +58,10 @@ class Schema {
         getTreeEvent: GetTreeEvent.fromJson(json["get_tree_event"]),
         registerRequest: RegisterRequest.fromJson(json["register_request"]),
         registerResponse: RegisterResponse.fromJson(json["register_response"]),
+        responseEvent: StatusResponseEvent.fromJson(json["response_event"]),
         role: Role.fromJson(json["role"]),
         roleAuthenticateRequest: RoleAuthenticateRequest.fromJson(json["role_authenticate_request"]),
-        setEvent: SetEvent.fromJson(json["set_event"]),
+        setEvent: InsertEvent.fromJson(json["set_event"]),
         setTreeEvent: SetTreeEvent.fromJson(json["set_tree_event"]),
         subscribeEvent: SubscribeEvent.fromJson(json["subscribe_event"]),
         unsubscribeEvent: UnsubscribeEvent.fromJson(json["unsubscribe_event"]),
@@ -75,6 +78,7 @@ class Schema {
         "get_tree_event": getTreeEvent.toJson(),
         "register_request": registerRequest.toJson(),
         "register_response": registerResponse.toJson(),
+        "response_event": responseEvent.toJson(),
         "role": role.toJson(),
         "role_authenticate_request": roleAuthenticateRequest.toJson(),
         "set_event": setEvent.toJson(),
@@ -101,18 +105,18 @@ class ChecksumEvent {
 }
 
 class DeleteEvent {
-    List<String> treeNames;
+    Map<String, String> treeItems;
 
     DeleteEvent({
-        required this.treeNames,
+        required this.treeItems,
     });
 
     factory DeleteEvent.fromJson(Map<String, dynamic> json) => DeleteEvent(
-        treeNames: List<String>.from(json["tree_names"].map((x) => x)),
+        treeItems: Map.from(json["tree_items"]).map((k, v) => MapEntry<String, String>(k, v)),
     );
 
     Map<String, dynamic> toJson() => {
-        "tree_names": List<dynamic>.from(treeNames.map((x) => x)),
+        "tree_items": Map.from(treeItems).map((k, v) => MapEntry<String, dynamic>(k, v)),
     };
 }
 
@@ -180,8 +184,7 @@ enum EchoTreeClientSocketEvent {
     DELETE_EVENT,
     GET_EVENT,
     GET_TREE_EVENT,
-    PING_EVENT,
-    SET_EVENT,
+    INSERT_EVENT,
     SET_TREE_EVENT,
     SUBSCRIBE_EVENT,
     UNSUBSCRIBE_EVENT
@@ -192,8 +195,7 @@ final echoTreeClientSocketEventValues = EnumValues({
     "DeleteEvent": EchoTreeClientSocketEvent.DELETE_EVENT,
     "GetEvent": EchoTreeClientSocketEvent.GET_EVENT,
     "GetTreeEvent": EchoTreeClientSocketEvent.GET_TREE_EVENT,
-    "PingEvent": EchoTreeClientSocketEvent.PING_EVENT,
-    "SetEvent": EchoTreeClientSocketEvent.SET_EVENT,
+    "InsertEvent": EchoTreeClientSocketEvent.INSERT_EVENT,
     "SetTreeEvent": EchoTreeClientSocketEvent.SET_TREE_EVENT,
     "SubscribeEvent": EchoTreeClientSocketEvent.SUBSCRIBE_EVENT,
     "UnsubscribeEvent": EchoTreeClientSocketEvent.UNSUBSCRIBE_EVENT
@@ -272,13 +274,15 @@ class EchoTreeServerSocketMessage {
 enum EchoTreeServerSocketEvent {
     ECHO_ITEM_EVENT,
     ECHO_TREE_EVENT,
-    PING_EVENT
+    PING_EVENT,
+    STATUS_RESPONSE_EVENT
 }
 
 final echoTreeServerSocketEventValues = EnumValues({
     "EchoItemEvent": EchoTreeServerSocketEvent.ECHO_ITEM_EVENT,
     "EchoTreeEvent": EchoTreeServerSocketEvent.ECHO_TREE_EVENT,
-    "PingEvent": EchoTreeServerSocketEvent.PING_EVENT
+    "PingEvent": EchoTreeServerSocketEvent.PING_EVENT,
+    "StatusResponseEvent": EchoTreeServerSocketEvent.STATUS_RESPONSE_EVENT
 });
 
 class GetEvent {
@@ -365,6 +369,30 @@ class RegisterResponse {
     };
 }
 
+class StatusResponseEvent {
+    EchoTreeClientSocketEvent? fromEvent;
+    String? message;
+    int statusCode;
+
+    StatusResponseEvent({
+        this.fromEvent,
+        this.message,
+        required this.statusCode,
+    });
+
+    factory StatusResponseEvent.fromJson(Map<String, dynamic> json) => StatusResponseEvent(
+        fromEvent: echoTreeClientSocketEventValues.map[json["from_event"]]!,
+        message: json["message"],
+        statusCode: json["status_code"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "from_event": echoTreeClientSocketEventValues.reverse[fromEvent],
+        "message": message,
+        "status_code": statusCode,
+    };
+}
+
 
 ///Role used for authentication to branches of the database
 class Role {
@@ -411,18 +439,18 @@ class RoleAuthenticateRequest {
     };
 }
 
-class SetEvent {
+class InsertEvent {
     String data;
     String key;
     String treeName;
 
-    SetEvent({
+    InsertEvent({
         required this.data,
         required this.key,
         required this.treeName,
     });
 
-    factory SetEvent.fromJson(Map<String, dynamic> json) => SetEvent(
+    factory InsertEvent.fromJson(Map<String, dynamic> json) => InsertEvent(
         data: json["data"],
         key: json["key"],
         treeName: json["tree_name"],

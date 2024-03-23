@@ -1,4 +1,4 @@
-use log::warn;
+// use log::warn;
 use protocol::schemas::socket_protocol::client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage};
 
 use crate::common::{ClientMap, EchoDB};
@@ -50,8 +50,10 @@ pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, 
     EchoTreeClientSocketEvent::GetTreeEvent => {
       get_tree_broker::get_tree_broker(uuid, msg, clients, db).await;
     },
-    _ => {
-      warn!("{}: unhandled method", uuid);
-    },
+
+    // unhandled (for future issues)
+    // _ => {
+    //   warn!("{}: unhandled method", uuid);
+    // },
   }
 }

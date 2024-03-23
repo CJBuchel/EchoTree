@@ -1,15 +1,20 @@
 // import 'package:echo_tree_flutter/schema/schema.dart';
+import 'package:echo_tree_flutter/client/client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_tree_flutter/echo_tree_flutter.dart';
+// import 'package:echo_tree_flutter/echo_tree_flutter.dart';
+import 'package:echo_tree_flutter/db/db.dart';
 import 'package:logger/logger.dart';
 
 void main() async {
   Logger().i('echo_tree_flutter_test.dart');
 
-  EchoTreeClient client = EchoTreeClient('http://localhost:2121');
+  EchoTreeClient().connect("http://localhost:2121");
 
-  await client.connect();
+  Database db = Database();
+  Logger().i(await db.test());
+
+  EchoTreeClient().disconnect();
 
   // test echo message
 
