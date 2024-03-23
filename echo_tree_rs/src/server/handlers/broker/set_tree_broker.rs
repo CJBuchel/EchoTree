@@ -1,12 +1,12 @@
 use log::warn;
 use protocol::schemas::socket_protocol::{
   client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage, SetTreeEvent},
-  server_socket_protocol::StatusResponseEvent,
+  server_socket_protocol::{EchoTreeEventTree, StatusResponseEvent},
 };
 
-use crate::common::{Clients, EchoDB};
+use crate::{common::{ClientMap, EchoDB, client_echo::ClientEcho}, db::managed_tree::ManagedTree};
 
-pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
+pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
   let client = match clients.read().await.get(&uuid) {
     Some(c) => c.clone(),
     None => {
@@ -30,12 +30,13 @@ pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
 
   // create list of tree names the client is trying to access
   let tree_names: Vec<String> = msg.trees.iter().map(|(t, _)| t.clone()).collect();
-  let unauthorized_tree_names: Vec<String> = client.get_unauthorized_trees(tree_names.clone());
+  let unauthorized_tree_names: Vec<String> = client.filter_unauthorized_trees(tree_names.clone());
+  let mut changed_trees: Vec<ManagedTree> = Vec::new();
 
   // access db and set trees the client has access to
   let mut write_db = db.write().await;
   for (tree_name, tree) in msg.trees {
-    if client.can_access_tree(&tree_name) {
+    if client.has_access_to_tree(&tree_name) {
       let managed_tree = match write_db.get_tree_map_mut().get_tree_mut(tree_name.clone()) {
         Some(t) => t,
         None => {
@@ -45,10 +46,24 @@ pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
       };
 
       match managed_tree.set_from_hashmap(tree) {
-        Ok(_) => log::debug!("{}: tree set: {}", uuid, tree_name),
+        Ok(_) => {
+          changed_trees.push(managed_tree.clone());
+          log::debug!("{}: tree set: {}", uuid, tree_name);
+        },
         Err(e) => log::error!("{}: error setting tree: {}", uuid, e),
       }
     }
+  }
+
+  if !changed_trees.is_empty() {
+    let echo_event: Vec<EchoTreeEventTree> = changed_trees.iter().map(|t| {
+      EchoTreeEventTree {
+        tree_name: t.get_name(),
+        tree: t.get_as_hashmap().unwrap_or_default(),
+        checksum: t.get_checksum(),
+      }
+    }).collect();
+    clients.read().await.echo_tree(echo_event);
   }
 
   if unauthorized_tree_names.is_empty() {

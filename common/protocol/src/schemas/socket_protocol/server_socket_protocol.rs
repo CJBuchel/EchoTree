@@ -17,7 +17,7 @@ pub struct EchoTreeEvent {
 }
 
 
-#[derive(serde::Deserialize, serde::Serialize, JsonSchema)]
+#[derive(serde::Deserialize, serde::Serialize, JsonSchema, Clone)]
 pub struct EchoItemEvent {
   pub checksum: u32, // new checksum of the tree (not the key/data)
   pub tree_name: String, // tree name

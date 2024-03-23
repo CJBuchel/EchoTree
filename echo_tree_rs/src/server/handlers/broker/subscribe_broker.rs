@@ -1,8 +1,8 @@
 use log::debug;
 use protocol::schemas::socket_protocol::{client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage, SubscribeEvent}, server_socket_protocol::StatusResponseEvent};
-use crate::common::Clients;
+use crate::common::ClientMap;
 
-pub async fn subscribe_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &Clients) {
+pub async fn subscribe_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap) {
   
   let mut client = match clients.read().await.get(&uuid).cloned() {
     Some(c) => c,

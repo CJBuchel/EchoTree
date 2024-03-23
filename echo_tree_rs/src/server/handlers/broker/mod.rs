@@ -1,20 +1,21 @@
 use log::warn;
 use protocol::schemas::socket_protocol::client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage};
 
-use crate::common::{Clients, EchoDB};
+use crate::common::{ClientMap, EchoDB};
 
 mod subscribe_broker;
 mod unsubscribe_broker;
 mod checksum_broker;
 mod insert_broker;
-mod insert_tree_broker;
 mod get_broker;
+mod delete_broker;
+mod set_tree_broker;
 
 /**
  * Broker for the echo message
  * Breakout for each echo message method
  */
-pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, clients: &Clients, db: &EchoDB) {
+pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
   match msg.message_event {
     // option events
     EchoTreeClientSocketEvent::ChecksumEvent => {
@@ -36,10 +37,14 @@ pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, 
     EchoTreeClientSocketEvent::GetEvent => {
       get_broker::get_broker(uuid, msg, clients, db).await;
     },
+    EchoTreeClientSocketEvent::DeleteEvent => {
+      delete_broker::delete_broker(uuid, msg, clients, db).await;
+    },
+
 
     // data tree events
     EchoTreeClientSocketEvent::SetTreeEvent => {
-      insert_tree_broker::set_tree_broker(uuid, msg, clients, db).await;
+      set_tree_broker::set_tree_broker(uuid, msg, clients, db).await;
     },
     _ => {
       warn!("{}: unhandled method", uuid);

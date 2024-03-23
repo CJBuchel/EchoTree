@@ -1,12 +1,12 @@
 use warp::Filter;
 
-use crate::common::{with_clients, with_db, Clients, EchoDB};
+use crate::common::{with_clients, with_db, ClientMap, EchoDB};
 use crate::server::handlers::register_handlers::{pulse_handler, register_handler, unregister_handler};
 use crate::server::handlers::ws_handlers::ws_handler;
 
 // client routes
 // 
-pub fn client_filter(clients: Clients, database: EchoDB, port: u16) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
   let pulse_route = warp::path("echo_tree").and(warp::path("pulse")).and_then(pulse_handler);
 
   let register = warp::path("echo_tree").and(warp::path("register"));

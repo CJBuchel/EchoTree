@@ -2,9 +2,9 @@ use futures::{FutureExt, StreamExt};
 use log::{debug, error, info, warn};
 use protocol::schemas::socket_protocol::client_socket_protocol::EchoTreeClientSocketMessage;
 
-use crate::{common::{Client, Clients, EchoDB, ResponseResult}, server::handlers::broker::echo_message_broker};
+use crate::{common::{client::Client, ClientMap, EchoDB, ResponseResult}, server::handlers::broker::echo_message_broker};
 
-async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) -> bool {
+async fn check_client_auth(uuid: String, auth_token: String, clients: &ClientMap) -> bool {
   let client = match clients.read().await.get(&uuid) {
     Some(c) => c.clone(),
     None => {
@@ -21,7 +21,7 @@ async fn check_client_auth(uuid: String, auth_token: String, clients: &Clients) 
   true
 }
 
-async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Clients, db: &EchoDB) {
+async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &ClientMap, db: &EchoDB) {
   debug!("{}: {:?}", uuid, msg);
 
   let message = match msg.to_str() {
@@ -54,7 +54,7 @@ async fn client_msg(uuid: String, msg: warp::filters::ws::Message, clients: &Cli
   echo_message_broker(uuid, operation_request, clients, db).await;
 }
 
-async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clients, mut client: Client, db: EchoDB) {
+async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: ClientMap, mut client: Client, db: EchoDB) {
   let (client_ws_sender, mut client_ws_recv) = ws.split();
   let (client_sender, client_recv) = tokio::sync::mpsc::unbounded_channel();
 
@@ -88,7 +88,7 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
 }
 
 // -> ResponseResult<impl warp::Reply>
-pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: Clients, db: EchoDB) -> ResponseResult<impl warp::Reply>  {
+pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: ClientMap, db: EchoDB) -> ResponseResult<impl warp::Reply>  {
   let client = clients.read().await.get(&uuid).cloned();
 
   match client {
