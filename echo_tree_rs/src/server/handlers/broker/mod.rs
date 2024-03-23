@@ -10,6 +10,7 @@ mod insert_broker;
 mod get_broker;
 mod delete_broker;
 mod set_tree_broker;
+mod get_tree_broker;
 
 /**
  * Broker for the echo message
@@ -45,6 +46,9 @@ pub async fn echo_message_broker(uuid:String, msg: EchoTreeClientSocketMessage, 
     // data tree events
     EchoTreeClientSocketEvent::SetTreeEvent => {
       set_tree_broker::set_tree_broker(uuid, msg, clients, db).await;
+    },
+    EchoTreeClientSocketEvent::GetTreeEvent => {
+      get_tree_broker::get_tree_broker(uuid, msg, clients, db).await;
     },
     _ => {
       warn!("{}: unhandled method", uuid);
