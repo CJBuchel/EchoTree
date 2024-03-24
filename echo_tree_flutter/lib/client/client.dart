@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:echo_tree_flutter/db/db.dart';
 import 'package:echo_tree_flutter/schema/schema.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -74,6 +76,11 @@ class EchoTreeClient {
       _connectedUrl = response.url;
       _authToken = response.authToken;
       _uuid = response.uuid;
+
+      if (response.hierarchy.isNotEmpty) {
+        debugPrint("initializing metadata...");
+        Database().init('metadata', hierarchy: response.hierarchy);
+      }
 
       // startup the websocket
       _channel = WebSocketChannel.connect(Uri.parse(_connectedUrl));

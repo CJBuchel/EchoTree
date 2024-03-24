@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use schemars::JsonSchema;
 
 
@@ -13,6 +15,7 @@ pub struct RegisterResponse {
   pub uuid: String,
   pub url: String,
   pub auth_token: String,
+  pub hierarchy: HashMap<String, String>, // tree, schema
 }
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema)]

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use log::{error, info, warn};
 
 use super::{managed_tree::ManagedTree, tree_map::TreeMap};
@@ -11,7 +13,7 @@ pub struct TreeHierarchy {
 
 impl TreeHierarchy {
   pub fn open(db: &sled::Db, metadata_path: String) -> TreeHierarchy {
-    let hierarchy = match ManagedTree::new(db, format!("{}/hierarchy", metadata_path)) {
+    let hierarchy = match ManagedTree::new(db, format!("{}:hierarchy", metadata_path)) {
       Ok(h) => h,
       Err(e) => {
         error!("ManagedTree::new failed: {}", e);
@@ -21,7 +23,7 @@ impl TreeHierarchy {
     TreeHierarchy { db: db.clone(), hierarchy, metadata_path }
   }
 
-  pub fn get_tree_map(&self) -> TreeMap {
+  pub fn open_tree_map(&self) -> TreeMap {
     let mut tree_map = TreeMap::new(&self.db, self.metadata_path.clone());
 
     self.hierarchy.iter().for_each(|branch| {
@@ -37,6 +39,10 @@ impl TreeHierarchy {
     });
 
     tree_map
+  }
+
+  pub fn get_as_hashmap(&self) -> Result<HashMap<String, String>, sled::Error> {
+    self.hierarchy.get_as_hashmap()
   }
 
   // clears all the values in the hierarchy tree (does not delete the tree itself)

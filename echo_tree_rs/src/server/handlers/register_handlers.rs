@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, error};
 use protocol::schemas::http_protocol::{RegisterRequest, RegisterResponse};
 
 use crate::common::{client::Client, ClientMap, EchoDB, ResponseResult};
@@ -36,12 +36,20 @@ pub async fn register_handler(body: RegisterRequest, clients: ClientMap, databas
 
   let url = format!("{}://{}:{}/echo_tree/ws/{}", protocol, local_ip, port, uuid);
 
+  let hierarchy = match db.get_hierarchy().get_as_hashmap() {
+    Ok(h) => h,
+    Err(e) => {
+      error!("get_as_hashmap failed: {}", e);
+      std::collections::HashMap::new()
+    }
+  };
 
   Ok(
     warp::reply::json(&RegisterResponse {
       uuid, // used to connect to the websocket, i.e ws://localhost:2121/ws/{uuid}
       url,
       auth_token,
+      hierarchy,
     })
   )
 }

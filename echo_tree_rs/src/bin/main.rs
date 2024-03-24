@@ -34,16 +34,16 @@ async fn main() {
   let schema = schemars::schema_for!(Contact);
   let schema = serde_json::to_string(&schema).unwrap();
 
-  database.add_tree("test/user".to_string(), schema);
+  database.add_tree("test:user".to_string(), schema);
 
 
   // serialize the contact and insert it into the database
   let contact_s = serde_json::to_string(&contact).unwrap();
-  database.insert("test/user".to_string(), contact.name, contact_s);
+  database.insert("test:user".to_string(), contact.name, contact_s);
 
   info!("\n\n -- Data --");
   // print contact
-  let contact_from_db = database.get("test/user".to_string(), "John Doe".to_string()).unwrap();
+  let contact_from_db = database.get("test:user".to_string(), "John Doe".to_string()).unwrap();
   let contact_from_db: Contact = serde_json::from_str(&contact_from_db).unwrap();
   info!("contact: {:?}", contact_from_db.name);
 

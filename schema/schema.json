@@ -314,12 +314,19 @@
       "type": "object",
       "required": [
         "auth_token",
+        "hierarchy",
         "url",
         "uuid"
       ],
       "properties": {
         "auth_token": {
           "type": "string"
+        },
+        "hierarchy": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "url": {
           "type": "string"

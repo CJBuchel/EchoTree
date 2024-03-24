@@ -347,23 +347,27 @@ class RegisterRequest {
 
 class RegisterResponse {
     String authToken;
+    Map<String, String> hierarchy;
     String url;
     String uuid;
 
     RegisterResponse({
         required this.authToken,
+        required this.hierarchy,
         required this.url,
         required this.uuid,
     });
 
     factory RegisterResponse.fromJson(Map<String, dynamic> json) => RegisterResponse(
         authToken: json["auth_token"],
+        hierarchy: Map.from(json["hierarchy"]).map((k, v) => MapEntry<String, String>(k, v)),
         url: json["url"],
         uuid: json["uuid"],
     );
 
     Map<String, dynamic> toJson() => {
         "auth_token": authToken,
+        "hierarchy": Map.from(hierarchy).map((k, v) => MapEntry<String, dynamic>(k, v)),
         "url": url,
         "uuid": uuid,
     };

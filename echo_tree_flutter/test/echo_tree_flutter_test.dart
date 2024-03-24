@@ -3,7 +3,6 @@ import 'package:echo_tree_flutter/client/client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // import 'package:echo_tree_flutter/echo_tree_flutter.dart';
-import 'package:echo_tree_flutter/db/db.dart';
 import 'package:logger/logger.dart';
 
 void main() async {
@@ -11,10 +10,10 @@ void main() async {
 
   EchoTreeClient().connect("http://localhost:2121");
 
-  Database db = Database();
-  Logger().i(await db.test());
+  // wait for 5 seconds
+  await Future.delayed(const Duration(seconds: 5));
 
-  EchoTreeClient().disconnect();
+  // EchoTreeClient().disconnect();
 
   // test echo message
 

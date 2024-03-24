@@ -2,11 +2,15 @@
 
 import 'dart:io';
 
+import 'package:echo_tree_flutter/db/tree_hierarchy.dart';
+import 'package:echo_tree_flutter/db/tree_map.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 class Database {
   static final Database _instance = Database._internal();
+  TreeHierarchy? _treeHierarchy;
+  TreeMap? _treeMap;
 
   factory Database() {
     return _instance;
@@ -14,18 +18,49 @@ class Database {
 
   Database._internal();
 
-  Future<String> test() async {
+  void init(String metadataPath, {Map<String, String>? hierarchy}) async {
     if (!kIsWeb) {
       String path = Directory.current.path;
-      path += '/tree.kvdb';
+      path += "/tree.kvdb";
       Hive.init(path);
     }
 
-    await Hive.openBox('tree');
-    var tree = Hive.box('tree');
-    tree.put('name', 'John Cena');
+    _treeHierarchy = TreeHierarchy(metadataPath);
+    _treeMap = await _treeHierarchy?.openTreeMap(hierarchy: hierarchy);
+  }
 
-    var name = tree.get('name');
-    return name;
+  get getTreeHierarchy => _treeHierarchy;
+  get getTreeMap => _treeMap;
+
+  void clear() {
+    _treeMap?.clear();
+    _treeHierarchy?.clear();
+  }
+
+  void drop() {
+    _treeMap?.drop();
+    _treeHierarchy?.drop();
+  }
+
+  void addTree(String treeName, String schema) {
+    _treeHierarchy?.insertSchema(treeName, schema);
+    _treeMap?.openTree(treeName);
+  }
+
+  void removeTree(String treeName) {
+    _treeHierarchy?.removeSchema(treeName);
+    _treeMap?.removeTree(treeName);
+  }
+
+  Future<void> insert(String treeName, String key, String value) async {
+    return _treeMap?.getTree(treeName).insert(key, value);
+  }
+
+  String get(String treeName, String key) {
+    return _treeMap?.getTree(treeName).get(key) ?? '';
+  }
+
+  Future<void> remove(String treeName, String key) async {
+    return _treeMap?.getTree(treeName).remove(key);
   }
 }

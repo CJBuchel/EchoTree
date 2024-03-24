@@ -29,7 +29,7 @@ impl Database {
     let role_manager = RoleManager::open(&db, config.metadata_path.clone());
 
     // create the tree map from the hierarchy
-    let trees = hierarchy.get_tree_map();
+    let trees = hierarchy.open_tree_map();
 
     Database { hierarchy, trees, role_manager }
   }

@@ -13,6 +13,11 @@ pub struct ManagedTree {
 
 impl ManagedTree {
   pub fn new(db: &sled::Db, tree_name: String) -> Result<Self, sled::Error> {
+    if tree_name.contains('/') {
+      log::error!("tree name cannot contain '/' for {}, try using ':' instead", tree_name);
+      return Err(sled::Error::Unsupported("tree name cannot contain /".to_string()));
+    }
+
     let tree = match db.open_tree(tree_name.clone()) {
       Ok(t) => t,
       Err(e) => {
