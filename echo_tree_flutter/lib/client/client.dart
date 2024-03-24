@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:echo_tree_flutter/client/broker/broker.dart';
 import 'package:echo_tree_flutter/db/db.dart';
 import 'package:echo_tree_flutter/schema/schema.dart';
 import 'package:flutter/foundation.dart';
@@ -62,21 +63,42 @@ class EchoTreeClient {
     }
   }
 
-  void connect(
+  void _listen() async {
+    try {
+      _channel?.stream.listen((event) {
+        final json = jsonDecode(event);
+        EchoTreeServerSocketMessage message = EchoTreeServerSocketMessage.fromJson(json);
+        EchoTreeMessageBroker().broker(message);
+      });
+    } catch (e) {
+      throw Exception('Failed to listen to server on: $_connectedUrl');
+    }
+  }
+
+  Future<void> connect(
     String address, {
     String? roleId,
     String? password,
+    List<String>? echoTrees,
   }) async {
     _address = address;
     _roleId = roleId ?? "";
     _password = password ?? "";
     final pulse = await _checkPulse(address);
     if (pulse) {
-      final response = await _register(address, echoTrees: ['echo_tree']);
+      final response = await _register(
+        address,
+        echoTrees: echoTrees,
+        roleId: roleId,
+        password: password,
+      );
+
+      // set the client properties
       _connectedUrl = response.url;
       _authToken = response.authToken;
       _uuid = response.uuid;
 
+      // initialize the database
       if (response.hierarchy.isNotEmpty) {
         debugPrint("initializing metadata...");
         Database().init('metadata', hierarchy: response.hierarchy);
@@ -84,6 +106,9 @@ class EchoTreeClient {
 
       // startup the websocket
       _channel = WebSocketChannel.connect(Uri.parse(_connectedUrl));
+      _channel?.ready.then((_) {
+        _listen();
+      });
     } else {
       throw Exception('Failed to connect to server');
     }
@@ -91,5 +116,25 @@ class EchoTreeClient {
 
   void disconnect() {
     _channel?.sink.close();
+  }
+
+  void subscribe(List<String> treeNames) {
+    final event = SubscribeEvent(treeNames: treeNames).toJson();
+    final message = EchoTreeClientSocketMessage(
+      authToken: _authToken,
+      messageEvent: EchoTreeClientSocketEvent.SUBSCRIBE_EVENT,
+      message: jsonEncode(event),
+    ).toJson();
+    _channel?.sink.add(jsonEncode(message));
+  }
+
+  void unsubscribe(List<String> treeNames) {
+    final event = UnsubscribeEvent(treeNames: treeNames).toJson();
+    final message = EchoTreeClientSocketMessage(
+      authToken: _authToken,
+      messageEvent: EchoTreeClientSocketEvent.UNSUBSCRIBE_EVENT,
+      message: jsonEncode(event),
+    ).toJson();
+    _channel?.sink.add(jsonEncode(message));
   }
 }

@@ -8,7 +8,11 @@ import 'package:logger/logger.dart';
 void main() async {
   Logger().i('echo_tree_flutter_test.dart');
 
-  EchoTreeClient().connect("http://localhost:2121");
+  await EchoTreeClient().connect("http://localhost:2121");
+  EchoTreeClient().subscribe(["test:user"]);
+
+  await Future.delayed(const Duration(seconds: 2));
+  EchoTreeClient().unsubscribe(["test:user"]);
 
   // wait for 5 seconds
   await Future.delayed(const Duration(seconds: 5));

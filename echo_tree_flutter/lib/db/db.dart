@@ -29,8 +29,8 @@ class Database {
     _treeMap = await _treeHierarchy?.openTreeMap(hierarchy: hierarchy);
   }
 
-  get getTreeHierarchy => _treeHierarchy;
-  get getTreeMap => _treeMap;
+  TreeHierarchy? get getTreeHierarchy => _treeHierarchy;
+  TreeMap? get getTreeMap => _treeMap;
 
   void clear() {
     _treeMap?.clear();
@@ -50,17 +50,5 @@ class Database {
   void removeTree(String treeName) {
     _treeHierarchy?.removeSchema(treeName);
     _treeMap?.removeTree(treeName);
-  }
-
-  Future<void> insert(String treeName, String key, String value) async {
-    return _treeMap?.getTree(treeName).insert(key, value);
-  }
-
-  String get(String treeName, String key) {
-    return _treeMap?.getTree(treeName).get(key) ?? '';
-  }
-
-  Future<void> remove(String treeName, String key) async {
-    return _treeMap?.getTree(treeName).remove(key);
   }
 }

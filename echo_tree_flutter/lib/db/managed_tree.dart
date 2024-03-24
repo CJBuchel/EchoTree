@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,8 @@ class ManagedTree {
   final String _treeName;
   int checksum = 0; // checksum of the tree (server side)
 
+  final StreamController<Map<String, dynamic>> _updatesController = StreamController<Map<String, dynamic>>.broadcast();
+
   ManagedTree(String treeName) : _treeName = treeName {
     if (treeName.contains('/')) {
       throw Exception("Invalid tree name: $treeName, cannot contain '/', use ':' instead.");
@@ -17,6 +20,16 @@ class ManagedTree {
   Future<void> open() async {
     debugPrint("opening tree: $_treeName...");
     _box = await Hive.openBox(_treeName);
+
+    // listen to changes
+    _box?.watch().listen((event) {
+      if (event.deleted) {
+        _updatesController.add({event.key: null});
+      } else {
+        final value = _box?.get(event.key);
+        _updatesController.add({event.key: value});
+      }
+    });
   }
 
   Future<void> insert(String key, String value) async {
@@ -41,17 +54,21 @@ class ManagedTree {
   }
 
   Future<int> clear() async {
+    int r = 0;
     if (_box != null) {
-      return await _box!.clear();
+      r = await _box!.clear();
     } else {
-      return 0;
+      r = 0;
     }
+
+    return r;
   }
 
   Future<void> drop() async {
     clear();
     if (_box != null) {
       _box!.deleteFromDisk();
+      _updatesController.close();
     }
   }
 
@@ -66,7 +83,7 @@ class ManagedTree {
     }
   }
 
-  Map<String, String> getAsHashmap() {
+  Map<String, String> get getAsHashmap {
     Map<String, String> map = {};
     if (_box != null) {
       _box!.toMap().forEach((key, value) {
@@ -84,7 +101,8 @@ class ManagedTree {
     }
   }
 
-  get getAsJson => jsonEncode(getAsHashmap());
-  get getName => _treeName;
+  String get getAsJson => jsonEncode(getAsHashmap);
+  String get getName => _treeName;
+  Stream<Map<String, dynamic>> get updates => _updatesController.stream;
   set setChecksum(int c) => checksum = c;
 }

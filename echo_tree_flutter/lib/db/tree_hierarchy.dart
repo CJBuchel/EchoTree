@@ -22,7 +22,7 @@ class TreeHierarchy {
       await Future.wait(futures);
     }
 
-    Map<String, String> metadataMap = _hierarchy.getAsHashmap();
+    Map<String, String> metadataMap = _hierarchy.getAsHashmap;
     TreeMap map = TreeMap(_metaDataPath);
 
     List<Future> futures = [];
