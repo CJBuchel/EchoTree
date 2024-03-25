@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -16,6 +17,10 @@ class EchoTreeClient {
   String _roleId = "";
   String _password = "";
   WebSocketChannel? _channel;
+
+  // main connection flag
+  bool _connected = false;
+  Timer? _checksumTimer;
 
   // getters
   get address => _address;
@@ -63,12 +68,49 @@ class EchoTreeClient {
     }
   }
 
+  // send checksum event to server (if connected)
+  void _sendChecksumsEvent() async {
+    if (!_connected) return;
+    debugPrint("sending checksums...");
+    final event = ChecksumEvent(treeChecksums: Database().getChecksums).toJson();
+    final message = EchoTreeClientSocketMessage(
+      authToken: _authToken,
+      messageEvent: EchoTreeClientSocketEvent.CHECKSUM_EVENT,
+      message: jsonEncode(event),
+    ).toJson();
+
+    _channel?.sink.add(jsonEncode(message));
+  }
+
+  // start the checksum timer (every 10 seconds send checksums to server)
+  void _startChecksumTimer() {
+    _checksumTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _sendChecksumsEvent();
+    });
+  }
+
+  // reset the checksum timer, (generally done when a proper message is send from the server)
+  void _resetChecksumTimer() {
+    _checksumTimer?.cancel();
+    _startChecksumTimer();
+  }
+
   void _listen() async {
     try {
       _channel?.stream.listen((event) {
-        final json = jsonDecode(event);
-        EchoTreeServerSocketMessage message = EchoTreeServerSocketMessage.fromJson(json);
-        EchoTreeMessageBroker().broker(message);
+        try {
+          final json = jsonDecode(event);
+          EchoTreeServerSocketMessage message = EchoTreeServerSocketMessage.fromJson(json);
+          EchoTreeMessageBroker().broker(message);
+
+          // reset the checksum timer on a proper data change
+          if (message.messageEvent == EchoTreeServerSocketEvent.ECHO_ITEM_EVENT ||
+              message.messageEvent == EchoTreeServerSocketEvent.ECHO_TREE_EVENT) {
+            _resetChecksumTimer(); // reset the timer on server response
+          }
+        } catch (e) {
+          debugPrint("Failed socket json decode. Error: $e");
+        }
       });
     } catch (e) {
       throw Exception('Failed to listen to server on: $_connectedUrl');
@@ -81,9 +123,13 @@ class EchoTreeClient {
     String? password,
     List<String>? echoTrees,
   }) async {
+    // reset values
+    _connected = false;
     _address = address;
     _roleId = roleId ?? "";
     _password = password ?? "";
+
+    // check server pulse
     final pulse = await _checkPulse(address);
     if (pulse) {
       final response = await _register(
@@ -107,7 +153,10 @@ class EchoTreeClient {
       // startup the websocket
       _channel = WebSocketChannel.connect(Uri.parse(_connectedUrl));
       _channel?.ready.then((_) {
+        // startup the receivers and listeners
+        _connected = true;
         _listen();
+        _resetChecksumTimer();
       });
     } else {
       throw Exception('Failed to connect to server');
@@ -116,6 +165,7 @@ class EchoTreeClient {
 
   void disconnect() {
     _channel?.sink.close();
+    _connected = false;
   }
 
   void subscribe(List<String> treeNames) {

@@ -1,5 +1,6 @@
 // Singleton class to save data to database
 
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:echo_tree_flutter/db/tree_hierarchy.dart';
@@ -50,5 +51,14 @@ class Database {
   void removeTree(String treeName) {
     _treeHierarchy?.removeSchema(treeName);
     _treeMap?.removeTree(treeName);
+  }
+
+  HashMap<String, int> get getChecksums {
+    HashMap<String, int> checksums = HashMap();
+    _treeMap?.forEach((treeName, tree) {
+      checksums[treeName] = tree.checksum;
+    });
+
+    return checksums;
   }
 }

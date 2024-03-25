@@ -1,4 +1,6 @@
 import 'package:echo_tree_flutter/client/broker/echo_item_broker.dart';
+import 'package:echo_tree_flutter/client/broker/echo_tree_broker.dart';
+import 'package:echo_tree_flutter/client/broker/responder_broker.dart';
 import 'package:echo_tree_flutter/schema/schema.dart';
 import 'package:flutter/foundation.dart';
 
@@ -19,14 +21,13 @@ class EchoTreeMessageBroker {
         debugPrint("Ping event (@TODO)");
         break;
       case EchoTreeServerSocketEvent.STATUS_RESPONSE_EVENT:
-        debugPrint("Status response event (@TODO)");
+        EchoResponderBroker().broker(message.message ?? "");
         break;
       case EchoTreeServerSocketEvent.ECHO_ITEM_EVENT:
-        debugPrint("Echo item event (@TODO)");
         EchoItemBroker().broker(message.message ?? "");
         break;
       case EchoTreeServerSocketEvent.ECHO_TREE_EVENT:
-        debugPrint("Echo tree event (@TODO)");
+        EchoTreeBroker().broker(message.message ?? "");
         break;
       default:
         debugPrint("Unknown event ${message.messageEvent}");

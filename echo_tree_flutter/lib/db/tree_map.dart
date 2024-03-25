@@ -53,4 +53,8 @@ class TreeMap {
       return ManagedTree(treeName);
     }
   }
+
+  void forEach(void Function(String, ManagedTree) f) {
+    _treeMap.forEach(f);
+  }
 }
