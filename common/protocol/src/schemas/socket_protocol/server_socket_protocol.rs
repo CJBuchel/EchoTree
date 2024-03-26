@@ -7,7 +7,6 @@ use super::client_socket_protocol::EchoTreeClientSocketEvent;
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema, Clone)]
 pub struct EchoTreeEventTree {
   pub tree_name: String, // tree name
-  pub checksum: u32, // checksum of the tree (not the key/data)
   pub tree: HashMap<String, String>, // (k, v)
 }
 
@@ -19,7 +18,6 @@ pub struct EchoTreeEvent {
 
 #[derive(serde::Deserialize, serde::Serialize, JsonSchema, Clone)]
 pub struct EchoItemEvent {
-  pub checksum: u32, // new checksum of the tree (not the key/data)
   pub tree_name: String, // tree name
   pub key: String, // key name
   pub data: String, // data

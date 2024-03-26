@@ -12,20 +12,14 @@ class EchoItemBroker {
 
   EchoItemBroker._internal();
 
-  Future<void> _remove(String treeName, int checksum, String key) async {
+  Future<void> _remove(String treeName, String key) async {
     // delete the item
-    await Database().getTreeMap?.getTree(treeName).remove(key).then((_) {
-      // update checksum
-      Database().getTreeMap?.getTree(treeName).setChecksum = checksum;
-    });
+    await Database().getTreeMap?.getTree(treeName).remove(key);
   }
 
-  Future<void> _insert(String treeName, int checksum, String key, String data) async {
+  Future<void> _insert(String treeName, String key, String data) async {
     // insert the item
-    await Database().getTreeMap?.getTree(treeName).insert(key, data).then((_) {
-      // update checksum
-      Database().getTreeMap?.getTree(treeName).setChecksum = checksum;
-    });
+    await Database().getTreeMap?.getTree(treeName).insert(key, data);
   }
 
   // broker method
@@ -35,10 +29,10 @@ class EchoItemBroker {
       EchoItemEvent event = EchoItemEvent.fromJson(jsonDecode(message));
 
       if (event.data.isEmpty) {
-        await _remove(event.treeName, event.checksum, event.key);
+        await _remove(event.treeName, event.key);
       } else {
         // update the item
-        await _insert(event.treeName, event.checksum, event.key, event.data);
+        await _insert(event.treeName, event.key, event.data);
       }
     } catch (e) {
       debugPrint("Error: $e");

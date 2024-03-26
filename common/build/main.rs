@@ -31,6 +31,9 @@ struct GeneratedRootSchema {
 
   subscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::SubscribeEvent,
   unsubscribe_event: protocol::schemas::socket_protocol::client_socket_protocol::UnsubscribeEvent,
+
+  // just a test
+  test_struct: protocol::schemas::TestStruct,
 }
 
 fn main() {

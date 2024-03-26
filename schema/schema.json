@@ -19,6 +19,7 @@
     "set_event",
     "set_tree_event",
     "subscribe_event",
+    "test_struct",
     "unsubscribe_event"
   ],
   "properties": {
@@ -70,6 +71,9 @@
     "subscribe_event": {
       "$ref": "#/definitions/SubscribeEvent"
     },
+    "test_struct": {
+      "$ref": "#/definitions/TestStruct"
+    },
     "unsubscribe_event": {
       "$ref": "#/definitions/UnsubscribeEvent"
     }
@@ -108,17 +112,11 @@
     "EchoItemEvent": {
       "type": "object",
       "required": [
-        "checksum",
         "data",
         "key",
         "tree_name"
       ],
       "properties": {
-        "checksum": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
         "data": {
           "type": "string"
         },
@@ -183,16 +181,10 @@
     "EchoTreeEventTree": {
       "type": "object",
       "required": [
-        "checksum",
         "tree",
         "tree_name"
       ],
       "properties": {
-        "checksum": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
         "tree": {
           "type": "object",
           "additionalProperties": {
@@ -430,6 +422,17 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "TestStruct": {
+      "type": "object",
+      "required": [
+        "test"
+      ],
+      "properties": {
+        "test": {
+          "type": "string"
         }
       }
     },

@@ -56,7 +56,6 @@ pub async fn get_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
 
       Some(EchoTreeEventTree {
         tree_name: t.clone(),
-        checksum: tree.get_checksum(),
         tree: tree_map,
       })
     })

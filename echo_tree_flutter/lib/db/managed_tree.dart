@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:echo_tree_flutter/db/checksum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 class ManagedTree {
   Box? _box;
   final String _treeName;
-  int checksum = 0; // checksum of the tree (server side)
+  int _checksum = 0;
+  final CRC32 _crc32 = CRC32();
 
   final StreamController<Map<String, dynamic>> _updatesController = StreamController<Map<String, dynamic>>.broadcast();
 
@@ -17,9 +19,22 @@ class ManagedTree {
     }
   }
 
+  void updateChecksum() {
+    if (_box != null) {
+      final Map<String, String> data = {};
+      _box!.toMap().forEach((key, value) {
+        data[key] = value.toString();
+      });
+      // calculate the checksum
+      _checksum = _crc32.calculateChecksum(data).toUnsigned(32);
+      debugPrint("Checksum: $_checksum for $_treeName");
+    }
+  }
+
   Future<void> open() async {
     debugPrint("opening tree: $_treeName...");
     _box = await Hive.openBox(_treeName);
+    updateChecksum();
 
     // listen to changes
     _box?.watch().listen((event) {
@@ -35,6 +50,7 @@ class ManagedTree {
   Future<void> insert(String key, String value) async {
     if (_box != null) {
       await _box!.put(key, value);
+      updateChecksum();
     } else {
       debugPrint("box is null, try opening it first: $_treeName...");
     }
@@ -50,6 +66,7 @@ class ManagedTree {
   Future<void> remove(String key) async {
     if (_box != null) {
       await _box!.delete(key);
+      updateChecksum();
     }
   }
 
@@ -57,6 +74,7 @@ class ManagedTree {
     int r = 0;
     if (_box != null) {
       r = await _box!.clear();
+      updateChecksum();
     } else {
       r = 0;
     }
@@ -69,6 +87,7 @@ class ManagedTree {
     if (_box != null) {
       _box!.deleteFromDisk();
       _updatesController.close();
+      updateChecksum();
     }
   }
 
@@ -80,6 +99,8 @@ class ManagedTree {
         futures.add(insert(key, value));
       });
       await Future.wait(futures);
+      debugPrint("Set from map, checksum update");
+      updateChecksum();
     }
   }
 
@@ -104,5 +125,5 @@ class ManagedTree {
   String get getAsJson => jsonEncode(getAsHashmap);
   String get getName => _treeName;
   Stream<Map<String, dynamic>> get updates => _updatesController.stream;
-  set setChecksum(int c) => checksum = c;
+  int get getChecksum => _checksum;
 }

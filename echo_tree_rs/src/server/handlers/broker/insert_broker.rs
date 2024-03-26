@@ -32,7 +32,6 @@ pub async fn insert_broker(uuid: String, msg: EchoTreeClientSocketMessage, clien
     let res = write_db.insert(msg.tree_name.clone(), msg.key.clone(), msg.data.clone());
 
     let echo_event = EchoItemEvent {
-      checksum: write_db.get_tree_map().get_tree(msg.tree_name.clone()).unwrap().get_checksum(),
       tree_name: msg.tree_name.clone(),
       key: msg.key.clone(),
       data: msg.data.clone(),

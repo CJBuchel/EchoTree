@@ -1,6 +1,10 @@
 // import 'package:echo_tree_flutter/schema/schema.dart';
+
+import 'dart:convert';
+
 import 'package:echo_tree_flutter/client/client.dart';
 import 'package:echo_tree_flutter/db/db.dart';
+import 'package:echo_tree_flutter/schema/schema.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // import 'package:echo_tree_flutter/echo_tree_flutter.dart';
@@ -14,18 +18,33 @@ void main() async {
   );
   EchoTreeClient().subscribe(["test:user"]);
 
+  Logger().i("Sending test in 2...");
   await Future.delayed(const Duration(seconds: 2));
 
   await EchoTreeClient().authenticate("public", "public");
 
-  // await EchoTreeClient().unregister();
+  EchoTreeClient().getTree(["test:user"]);
+
+  var clientTest = TestStruct(test: "UwU from client").toJson();
+
+  Logger().i("Client Send");
+  EchoTreeClient().insert("test:user", "Client", jsonEncode(clientTest));
 
   // wait for 5 seconds
-  await Future.delayed(const Duration(seconds: 35));
+  await Future.delayed(const Duration(seconds: 20));
 
-  Database().getTreeMap?.getTree("test:user").getAsHashmap.forEach((key, value) {
-    Logger().i("Key: $key, Value: $value");
-  });
+  EchoTreeClient().insert("test:user", "Client2", jsonEncode(clientTest));
+
+  await Future.delayed(const Duration(seconds: 20));
+
+  Map<String, String> treeMap = Database().getTreeMap?.getTree("test:user").getAsHashmap ?? {};
+
+  for (var tree in treeMap.entries) {
+    Logger().i("Key: ${tree.key}, Value: ${tree.value}");
+  }
+
+  await Future.delayed(const Duration(seconds: 2));
+
   EchoTreeClient().unsubscribe(["test:user"]);
 
   await EchoTreeClient().disconnect();

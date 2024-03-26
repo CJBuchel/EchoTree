@@ -14,9 +14,7 @@ class EchoTreeBroker {
   EchoTreeBroker._internal();
 
   Future<void> _setTree(EchoTreeEventTree tree) async {
-    await Database().getTreeMap?.getTree(tree.treeName).setFromHashmap(tree.tree).then((_) {
-      Database().getTreeMap?.getTree(tree.treeName).setChecksum = tree.checksum;
-    });
+    await Database().getTreeMap?.getTree(tree.treeName).setFromHashmap(tree.tree);
   }
 
   Future<void> _set(List<EchoTreeEventTree> trees) async {

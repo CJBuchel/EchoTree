@@ -60,7 +60,6 @@ pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
       EchoTreeEventTree {
         tree_name: t.get_name(),
         tree: t.get_as_hashmap().unwrap_or_default(),
-        checksum: t.get_checksum(),
       }
     }).collect();
     clients.read().await.echo_tree(echo_event);

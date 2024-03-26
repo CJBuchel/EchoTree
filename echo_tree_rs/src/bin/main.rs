@@ -1,17 +1,8 @@
 use echo_tree_rs::{common::EchoDB, db, server};
 use log::info;
-use protocol::schemas::Role;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use protocol::schemas::{Role, TestStruct};
 
 
-
-#[derive(JsonSchema, Serialize, Deserialize, Debug)]
-struct Contact {
-  name: String,
-  email: String,
-  phone: String,
-}
 
 #[tokio::main]
 async fn main() {
@@ -26,21 +17,19 @@ async fn main() {
 
   let mut database = db::db::Database::new(db::db::DatabaseConfig::default());
 
-  let contact = Contact {
-    name: "John Doe".to_string(),
-    email: "".to_string(),
-    phone: "123-456-7890".to_string(),
+  let server_test = TestStruct {
+    test: "lofi beats baby".to_string(),
   };
 
-  let schema = schemars::schema_for!(Contact);
-  let schema = serde_json::to_string(&schema).unwrap();
+  let schema = schemars::schema_for!(TestStruct);
+  let schema = serde_json::to_string(&schema).unwrap_or_default();
 
   database.add_tree("test:user".to_string(), schema);
 
 
   // serialize the contact and insert it into the database
-  let contact_s = serde_json::to_string(&contact).unwrap();
-  database.insert("test:user".to_string(), contact.name, contact_s);
+  let contact_s = serde_json::to_string(&server_test).unwrap_or_default();
+  // database.insert("test:user".to_string(), "Server".to_string(), contact_s);
 
   // create role
   let public_role = Role {
@@ -52,17 +41,17 @@ async fn main() {
 
   info!("\n\n -- Data --");
   // print contact
-  let contact_from_db = database.get("test:user".to_string(), "John Doe".to_string()).unwrap();
-  let contact_from_db: Contact = serde_json::from_str(&contact_from_db).unwrap();
-  info!("contact: {:?}", contact_from_db.name);
+  let contact_from_db = database.get("test:user".to_string(), "Server".to_string()).unwrap_or_default();
+  let contact_from_db: TestStruct = serde_json::from_str(&contact_from_db).unwrap_or(TestStruct { test: "".to_string() });
+  info!("contact: {:?}", contact_from_db.test);
 
   // print all schemas
   info!("\n\n -- Schema --");
   database.get_hierarchy().iter().for_each(|result| {
     if let Ok((k, v)) = result {
       // ivec as string
-      let k = std::str::from_utf8(&k).unwrap();
-      let v = std::str::from_utf8(&v).unwrap();
+      let k = std::str::from_utf8(&k).unwrap_or_default();
+      let v = std::str::from_utf8(&v).unwrap_or_default();
       info!("tree: {}, schema: {}", k, v);
     }
   });

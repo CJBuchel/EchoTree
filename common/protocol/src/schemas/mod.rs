@@ -12,3 +12,8 @@ pub struct Role {
   pub password: String,
   pub echo_trees: Vec<String>, // list of topics/trees the role can access
 }
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, JsonSchema)]
+pub struct TestStruct {
+  pub test: String,
+}

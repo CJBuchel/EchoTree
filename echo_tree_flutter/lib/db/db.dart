@@ -56,7 +56,7 @@ class Database {
   HashMap<String, int> get getChecksums {
     HashMap<String, int> checksums = HashMap();
     _treeMap?.forEach((treeName, tree) {
-      checksums[treeName] = tree.checksum;
+      checksums[treeName] = tree.getChecksum;
     });
 
     return checksums;

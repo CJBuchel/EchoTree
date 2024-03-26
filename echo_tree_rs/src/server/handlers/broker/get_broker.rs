@@ -29,10 +29,6 @@ pub async fn get_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients:
     // db access
     let read_db = db.read().await;
     let res = read_db.get(msg.tree_name.clone(), msg.key.clone());
-    let checksum = match read_db.get_tree_map().get_tree(msg.tree_name.clone()) {
-      Some(t) => t.get_checksum(),
-      None => 0,
-    };
 
     let res = match res {
       Some(r) => r,
@@ -47,7 +43,6 @@ pub async fn get_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients:
     };
     
     let echo_event = EchoItemEvent {
-      checksum,
       tree_name: msg.tree_name,
       key: msg.key,
       data: res,

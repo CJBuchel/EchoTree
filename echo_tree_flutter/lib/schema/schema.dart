@@ -25,6 +25,7 @@ class Schema {
     InsertEvent setEvent;
     SetTreeEvent setTreeEvent;
     SubscribeEvent subscribeEvent;
+    TestStruct testStruct;
     UnsubscribeEvent unsubscribeEvent;
 
     Schema({
@@ -44,6 +45,7 @@ class Schema {
         required this.setEvent,
         required this.setTreeEvent,
         required this.subscribeEvent,
+        required this.testStruct,
         required this.unsubscribeEvent,
     });
 
@@ -64,6 +66,7 @@ class Schema {
         setEvent: InsertEvent.fromJson(json["set_event"]),
         setTreeEvent: SetTreeEvent.fromJson(json["set_tree_event"]),
         subscribeEvent: SubscribeEvent.fromJson(json["subscribe_event"]),
+        testStruct: TestStruct.fromJson(json["test_struct"]),
         unsubscribeEvent: UnsubscribeEvent.fromJson(json["unsubscribe_event"]),
     );
 
@@ -84,6 +87,7 @@ class Schema {
         "set_event": setEvent.toJson(),
         "set_tree_event": setTreeEvent.toJson(),
         "subscribe_event": subscribeEvent.toJson(),
+        "test_struct": testStruct.toJson(),
         "unsubscribe_event": unsubscribeEvent.toJson(),
     };
 }
@@ -121,27 +125,23 @@ class DeleteEvent {
 }
 
 class EchoItemEvent {
-    int checksum;
     String data;
     String key;
     String treeName;
 
     EchoItemEvent({
-        required this.checksum,
         required this.data,
         required this.key,
         required this.treeName,
     });
 
     factory EchoItemEvent.fromJson(Map<String, dynamic> json) => EchoItemEvent(
-        checksum: json["checksum"],
         data: json["data"],
         key: json["key"],
         treeName: json["tree_name"],
     );
 
     Map<String, dynamic> toJson() => {
-        "checksum": checksum,
         "data": data,
         "key": key,
         "tree_name": treeName,
@@ -218,24 +218,20 @@ class EchoTreeEvent {
 }
 
 class EchoTreeEventTree {
-    int checksum;
     Map<String, String> tree;
     String treeName;
 
     EchoTreeEventTree({
-        required this.checksum,
         required this.tree,
         required this.treeName,
     });
 
     factory EchoTreeEventTree.fromJson(Map<String, dynamic> json) => EchoTreeEventTree(
-        checksum: json["checksum"],
         tree: Map.from(json["tree"]).map((k, v) => MapEntry<String, String>(k, v)),
         treeName: json["tree_name"],
     );
 
     Map<String, dynamic> toJson() => {
-        "checksum": checksum,
         "tree": Map.from(tree).map((k, v) => MapEntry<String, dynamic>(k, v)),
         "tree_name": treeName,
     };
@@ -494,6 +490,22 @@ class SubscribeEvent {
 
     Map<String, dynamic> toJson() => {
         "tree_names": List<dynamic>.from(treeNames.map((x) => x)),
+    };
+}
+
+class TestStruct {
+    String test;
+
+    TestStruct({
+        required this.test,
+    });
+
+    factory TestStruct.fromJson(Map<String, dynamic> json) => TestStruct(
+        test: json["test"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "test": test,
     };
 }
 

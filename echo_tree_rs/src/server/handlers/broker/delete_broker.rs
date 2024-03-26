@@ -44,7 +44,6 @@ pub async fn delete_broker(uuid: String, msg: EchoTreeClientSocketMessage, clien
       match managed_tree.remove(key.as_bytes()) {
         Ok(_) => {
           let echo_item_event = EchoItemEvent {
-            checksum: managed_tree.get_checksum(),
             tree_name: tree_name.clone(),
             key: key.clone(),
             data: "".to_string(),
