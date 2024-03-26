@@ -274,14 +274,12 @@ class EchoTreeServerSocketMessage {
 enum EchoTreeServerSocketEvent {
     ECHO_ITEM_EVENT,
     ECHO_TREE_EVENT,
-    PING_EVENT,
     STATUS_RESPONSE_EVENT
 }
 
 final echoTreeServerSocketEventValues = EnumValues({
     "EchoItemEvent": EchoTreeServerSocketEvent.ECHO_ITEM_EVENT,
     "EchoTreeEvent": EchoTreeServerSocketEvent.ECHO_TREE_EVENT,
-    "PingEvent": EchoTreeServerSocketEvent.PING_EVENT,
     "StatusResponseEvent": EchoTreeServerSocketEvent.STATUS_RESPONSE_EVENT
 });
 

@@ -17,9 +17,6 @@ class EchoTreeMessageBroker {
   void broker(EchoTreeServerSocketMessage message) {
     // broker the message
     switch (message.messageEvent) {
-      case EchoTreeServerSocketEvent.PING_EVENT:
-        debugPrint("Ping event (@TODO)");
-        break;
       case EchoTreeServerSocketEvent.STATUS_RESPONSE_EVENT:
         EchoResponderBroker().broker(message.message ?? "");
         break;
@@ -30,7 +27,7 @@ class EchoTreeMessageBroker {
         EchoTreeBroker().broker(message.message ?? "");
         break;
       default:
-        debugPrint("Unknown event ${message.messageEvent}");
+        debugPrint("Unhandled event ${message.messageEvent}");
     }
   }
 }

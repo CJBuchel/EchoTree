@@ -38,17 +38,12 @@ class EchoTreeClient {
 
   EchoTreeClient._internal();
 
-  Future<bool> _checkPulse(String address) async {
-    final response = await http.get(Uri.parse("$address/echo_tree/pulse"));
+  Future<bool> _checkPulse() async {
+    final response = await http.get(Uri.parse("$_address/echo_tree/pulse"));
     return response.statusCode == HttpStatus.ok ? true : false;
   }
 
-  Future<RegisterResponse> _register(
-    String address, {
-    List<String>? echoTrees,
-    String? roleId,
-    String? password,
-  }) async {
+  Future<RegisterResponse> register({List<String>? echoTrees}) async {
     // register the client
     List<String> trees = echoTrees ?? [];
     final request = RegisterRequest(echoTrees: trees, roleId: roleId, password: password).toJson();
@@ -64,8 +59,47 @@ class EchoTreeClient {
     if (response.statusCode == HttpStatus.ok) {
       return RegisterResponse.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to register client');
+      throw Exception('Failed to register client ${response.statusCode}');
     }
+  }
+
+  Future<int> unregister() async {
+    // unregister the client
+    final response = await http.delete(
+      Uri.parse("$address/echo_tree/register"),
+      headers: {
+        "X-Client-Id": _uuid,
+        "X-Auth-Token": _authToken,
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == HttpStatus.ok) {
+      return response.statusCode;
+    } else {
+      throw Exception('Failed to unregister client ${response.statusCode}');
+    }
+  }
+
+  Future<int> authenticate(String roleId, String password) async {
+    // authenticate the client
+    final request = RoleAuthenticateRequest(roleId: roleId, password: password).toJson();
+
+    return await http.post(
+      Uri.parse("$address/echo_tree/role_auth"),
+      body: jsonEncode(request),
+      headers: {
+        "X-Client-Id": _uuid,
+        "X-Auth-Token": _authToken,
+        "Content-Type": "application/json",
+      },
+    ).then((response) {
+      if (response.statusCode == HttpStatus.ok) {
+        return response.statusCode;
+      } else {
+        throw Exception('Failed to authenticate client ${response.statusCode}');
+      }
+    });
   }
 
   // send checksum event to server (if connected)
@@ -130,14 +164,9 @@ class EchoTreeClient {
     _password = password ?? "";
 
     // check server pulse
-    final pulse = await _checkPulse(address);
+    final pulse = await _checkPulse();
     if (pulse) {
-      final response = await _register(
-        address,
-        echoTrees: echoTrees,
-        roleId: roleId,
-        password: password,
-      );
+      final response = await register();
 
       // set the client properties
       _connectedUrl = response.url;
@@ -163,9 +192,10 @@ class EchoTreeClient {
     }
   }
 
-  void disconnect() {
-    _channel?.sink.close();
+  Future<void> disconnect() async {
     _connected = false;
+    // https://datatracker.ietf.org/doc/html/rfc6455#section-7.4 (i'm being proper XD )
+    _channel?.sink.close(1000);
   }
 
   void subscribe(List<String> treeNames) {

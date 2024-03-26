@@ -11,20 +11,24 @@ void main() async {
 
   await EchoTreeClient().connect(
     "http://localhost:2121",
-    roleId: "public",
-    password: "public",
   );
   EchoTreeClient().subscribe(["test:user"]);
 
   await Future.delayed(const Duration(seconds: 2));
 
+  await EchoTreeClient().authenticate("public", "public");
+
+  // await EchoTreeClient().unregister();
+
   // wait for 5 seconds
-  await Future.delayed(const Duration(seconds: 30));
+  await Future.delayed(const Duration(seconds: 35));
 
   Database().getTreeMap?.getTree("test:user").getAsHashmap.forEach((key, value) {
     Logger().i("Key: $key, Value: $value");
   });
   EchoTreeClient().unsubscribe(["test:user"]);
+
+  await EchoTreeClient().disconnect();
 
   test('Test', () {});
 }
