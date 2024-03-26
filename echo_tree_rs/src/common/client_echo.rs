@@ -1,3 +1,4 @@
+use log::debug;
 use protocol::schemas::socket_protocol::server_socket_protocol::{EchoItemEvent, EchoTreeEvent, EchoTreeEventTree, EchoTreeServerSocketEvent, EchoTreeServerSocketMessage};
 
 use super::{client::Client, ClientHashMap};
@@ -9,6 +10,7 @@ pub trait ClientEcho {
 
 impl ClientEcho for Client {
   fn echo_tree(&self, msg: Vec<EchoTreeEventTree>) {
+    debug!("echoing tree to client: {}", self.auth_token);
     let filtered_subscribed_trees: Vec<EchoTreeEventTree> = msg
       .iter()
       .filter(|t| self.has_access_and_subscribed_to_tree(&t.tree_name))
@@ -26,6 +28,8 @@ impl ClientEcho for Client {
 
       let json = serde_json::to_string(&echo_message).unwrap_or_default();
       self.send_message(json);
+    } else {
+      debug!("no trees to echo to client: {}, client trees: {:?}", self.auth_token, self.echo_trees);
     }
   }
 

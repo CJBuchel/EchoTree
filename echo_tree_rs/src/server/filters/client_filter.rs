@@ -1,8 +1,13 @@
 use warp::Filter;
 
 use crate::common::{with_clients, with_db, ClientMap, EchoDB};
-use crate::server::handlers::register_handlers::{pulse_handler, register_handler, unregister_handler};
+use crate::server::handlers::pulse_handler;
+use crate::server::handlers::register_handlers::{register_handler, unregister_handler};
+use crate::server::handlers::role_auth_handler::role_auth_handler;
 use crate::server::handlers::ws_handlers::ws_handler;
+
+use super::auth_token_filter::check_auth;
+use super::HEADER_X_CLIENT_ID;
 
 // client routes
 // 
@@ -21,9 +26,19 @@ pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16) -> impl wa
 
   let unregister_routes = register
     .and(warp::delete())
-    .and(warp::path::param())
+    .and(warp::header::<String>(HEADER_X_CLIENT_ID))
     .and(with_clients(clients.clone()))
+    .and(check_auth(clients.clone()))
     .and_then(unregister_handler);
+
+  let role_auth_route = warp::path("echo_tree").and(warp::path("role_auth"))
+    .and(warp::post())
+    .and(warp::header::<String>(HEADER_X_CLIENT_ID))
+    .and(warp::body::json())
+    .and(with_clients(clients.clone()))
+    .and(with_db(database.clone()))
+    .and(check_auth(clients.clone()))
+    .and_then(role_auth_handler);
 
   let ws_route = warp::path("echo_tree").and(warp::path("ws"))
     .and(warp::ws())
@@ -40,6 +55,7 @@ pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16) -> impl wa
   let routes = pulse_route
     .or(register_routes)
     .or(unregister_routes)
+    .or(role_auth_route)
     .or(ws_route)
     .with(cors);
 

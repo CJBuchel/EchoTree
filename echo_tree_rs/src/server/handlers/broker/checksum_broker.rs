@@ -49,7 +49,9 @@ pub async fn checksum_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
   }).collect();
 
   // echo the new trees to the client
-  client.echo_tree(new_client_trees);
+  if !new_client_trees.is_empty() {
+    client.echo_tree(new_client_trees);
+  }
 
   client.respond(StatusResponseEvent {
     status_code: warp::http::StatusCode::OK.as_u16(),

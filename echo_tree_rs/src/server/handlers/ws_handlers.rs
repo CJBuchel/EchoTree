@@ -65,14 +65,39 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
     }
   }));
 
-  client.sender = Some(client_sender);
+  client.sender = Some(client_sender.clone());
   clients.write().await.insert(uuid.clone(), client);
 
-  info!("{} connected", uuid);
+  info!("{} connected, client count: {}", uuid, clients.read().await.len());
+
+  let ping_uuid = uuid.clone();
+
+  // spawn ping task
+  let ping_task = tokio::spawn(async move {
+    loop {
+      tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+      debug!("{}: ping to client", ping_uuid);
+      let ping_m = warp::filters::ws::Message::ping("");
+      if client_sender.send(Ok(ping_m)).is_err() {
+        break;
+      }
+    }
+  });
 
   while let Some(result) = client_ws_recv.next().await {
     let msg = match result {
-      Ok(msg) => msg,
+
+      Ok(msg) => {
+        if msg.is_close() {
+          break;
+        } else if msg.is_pong() {
+          debug!("{}: pong from client", uuid);
+          continue;
+        } else {
+          // handle the message
+          msg
+        }
+      },
       Err(e) => {
         error!("{}: {:?}", uuid, e);
         break;
@@ -83,16 +108,17 @@ async fn client_connection(ws: warp::ws::WebSocket, uuid: String, clients: Clien
     client_msg(uuid.clone(), msg, &clients, &db).await;
   }
 
+  // cancel the ping task
+  ping_task.abort();
+
   clients.write().await.remove(&uuid);
-  info!("{} disconnected", uuid);
+  info!("{} disconnected, current client count: {}", uuid, clients.read().await.len());
 }
 
 // -> ResponseResult<impl warp::Reply>
 pub async fn ws_handler(ws: warp::ws::Ws, uuid: String, clients: ClientMap, db: EchoDB) -> ResponseResult<impl warp::Reply>  {
   let client = clients.read().await.get(&uuid).cloned();
-
   match client {
-
     // client found
     Some(c) => {
       Ok(ws.on_upgrade(move |socket| client_connection(socket, uuid, clients, c, db)))

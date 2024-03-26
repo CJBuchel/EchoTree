@@ -210,7 +210,6 @@
       "enum": [
         "EchoTreeEvent",
         "EchoItemEvent",
-        "PingEvent",
         "StatusResponseEvent"
       ]
     },

@@ -1,5 +1,6 @@
 use echo_tree_rs::{common::EchoDB, db, server};
 use log::info;
+use protocol::schemas::Role;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -40,6 +41,14 @@ async fn main() {
   // serialize the contact and insert it into the database
   let contact_s = serde_json::to_string(&contact).unwrap();
   database.insert("test:user".to_string(), contact.name, contact_s);
+
+  // create role
+  let public_role = Role {
+    role_id: "public".to_string(),
+    password: "public".to_string(),
+    echo_trees: vec!["test:user".to_string()],
+  };
+  database.get_role_manager().insert_role(public_role.to_owned());
 
   info!("\n\n -- Data --");
   // print contact

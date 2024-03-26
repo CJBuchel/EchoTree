@@ -26,6 +26,7 @@ pub async fn register_handler(body: RegisterRequest, clients: ClientMap, databas
 
   register_client(uuid.clone(), auth_token.clone(), body.echo_trees, role_trees, clients).await;
 
+  // @TODO (fixup external protocol chooser)
   #[cfg(not(debug_assertions))]
   let protocol = "wss";
   #[cfg(debug_assertions)]
@@ -54,13 +55,8 @@ pub async fn register_handler(body: RegisterRequest, clients: ClientMap, databas
   )
 }
 
-pub async fn unregister_handler(uuid: String, clients: ClientMap) -> ResponseResult<impl warp::reply::Reply> {
-  debug!("un-registering client with uuid: {}", uuid);
-  clients.write().await.remove(&uuid);
+pub async fn unregister_handler(client_uuid: String, clients: ClientMap) -> ResponseResult<impl warp::reply::Reply> {
+  debug!("un-registering client with uuid: {}", client_uuid);
+  clients.write().await.remove(&client_uuid);
   Ok(warp::http::StatusCode::OK)
-}
-
-pub fn pulse_handler() -> impl futures::Future<Output = ResponseResult<impl warp::reply::Reply>> {
-  debug!("pulse");
-  futures::future::ready(Ok(warp::http::StatusCode::OK))
 }

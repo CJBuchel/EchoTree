@@ -47,7 +47,6 @@ pub enum EchoTreeServerSocketEvent {
   EchoItemEvent, // tree, key, data
   
   // option events
-  PingEvent, // (no message)
   StatusResponseEvent, // status code, message
 }
 
