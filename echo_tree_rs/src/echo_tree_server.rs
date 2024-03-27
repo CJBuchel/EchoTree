@@ -7,9 +7,9 @@ use protocol::schemas::socket_protocol::server_socket_protocol::{EchoItemEvent, 
 use crate::{common::{ClientMap, EchoDB, client_echo::ClientEcho}, db::db::{Database, DatabaseConfig}, server::filters};
 
 pub struct EchoTreeServerConfig {
-  db_path: String,
-  port: u16,
-  addr: Ipv4Addr, // [0,0,0,0] etc...
+  pub db_path: String,
+  pub port: u16,
+  pub addr: Ipv4Addr, // [0,0,0,0] etc...
 }
 
 impl Default for EchoTreeServerConfig {
