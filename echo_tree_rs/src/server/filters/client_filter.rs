@@ -11,7 +11,7 @@ use super::HEADER_X_CLIENT_ID;
 
 // client routes
 // 
-pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16, ws_protocol: String) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
   let pulse_route = warp::path("echo_tree").and(warp::path("pulse")).and_then(pulse_handler);
 
   let register = warp::path("echo_tree").and(warp::path("register"));
@@ -22,6 +22,7 @@ pub fn client_filter(clients: ClientMap, database: EchoDB, port: u16) -> impl wa
     .and(with_clients(clients.clone()))
     .and(with_db(database.clone()))
     .and(warp::any().map(move || port))
+    .and(warp::any().map(move || ws_protocol.clone()))
     .and_then(register_handler);
 
   let unregister_routes = register

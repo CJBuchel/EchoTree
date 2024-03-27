@@ -9,7 +9,7 @@ async fn register_client(uuid: String, auth_token:String, subscribed_trees: Vec<
   clients.write().await.insert(uuid, Client::new(auth_token, role_read_trees, role_read_write_trees, subscribed_trees, None));
 }
 
-pub async fn register_handler(body: RegisterRequest, clients: ClientMap, database: EchoDB, port: u16) -> ResponseResult<impl warp::reply::Reply> {
+pub async fn register_handler(body: RegisterRequest, clients: ClientMap, database: EchoDB, port: u16, ws_protocol: String) -> ResponseResult<impl warp::reply::Reply> {
   let uuid = uuid::Uuid::new_v4().to_string();
   let auth_token = uuid::Uuid::new_v4().to_string();
 
@@ -31,16 +31,8 @@ pub async fn register_handler(body: RegisterRequest, clients: ClientMap, databas
 
   register_client(uuid.clone(), auth_token.clone(), body.echo_trees, role_read_trees, role_read_write_trees, clients).await;
 
-  // @TODO (fixup external protocol chooser)
-  #[cfg(not(debug_assertions))]
-  let protocol = "wss";
-  #[cfg(debug_assertions)]
-  let protocol = "ws";
-
   let local_ip = local_ip_address::local_ip().unwrap();
-
-
-  let url = format!("{}://{}:{}/echo_tree/ws/{}", protocol, local_ip, port, uuid);
+  let url = format!("{}://{}:{}/echo_tree/ws/{}", ws_protocol, local_ip, port, uuid);
 
   let hierarchy = match db.get_hierarchy().get_as_hashmap() {
     Ok(h) => h,

@@ -54,8 +54,12 @@ impl EchoTreeServer {
     self.clients.clone()
   }
 
+  pub fn get_internal_tls_routes(&self) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    filters::client_filter::client_filter(self.clients.clone(), self.database.clone(), self.config.port, "wss".to_string())
+  }
+
   pub fn get_internal_routes(&self) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    filters::client_filter::client_filter(self.clients.clone(), self.database.clone(), self.config.port)
+    filters::client_filter::client_filter(self.clients.clone(), self.database.clone(), self.config.port, "ws".to_string())
   }
 
   pub async fn serve(&self) {
