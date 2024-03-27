@@ -22,12 +22,14 @@ class ManagedTree {
   void updateChecksum() {
     if (_box != null) {
       final Map<String, String> data = {};
-      _box!.toMap().forEach((key, value) {
-        data[key] = value.toString();
-      });
+      var boxMap = _box!.toMap();
+
+      for (var key in boxMap.keys) {
+        data[key] = boxMap[key];
+      }
+
       // calculate the checksum
       _checksum = _crc32.calculateChecksum(data).toUnsigned(32);
-      debugPrint("Checksum: $_checksum for $_treeName");
     }
   }
 
@@ -38,6 +40,7 @@ class ManagedTree {
 
     // listen to changes
     _box?.watch().listen((event) {
+      updateChecksum();
       if (event.deleted) {
         _updatesController.add({event.key: null});
       } else {
@@ -50,7 +53,6 @@ class ManagedTree {
   Future<void> insert(String key, String value) async {
     if (_box != null) {
       await _box!.put(key, value);
-      updateChecksum();
     } else {
       debugPrint("box is null, try opening it first: $_treeName...");
     }
@@ -66,7 +68,6 @@ class ManagedTree {
   Future<void> remove(String key) async {
     if (_box != null) {
       await _box!.delete(key);
-      updateChecksum();
     }
   }
 
@@ -74,7 +75,6 @@ class ManagedTree {
     int r = 0;
     if (_box != null) {
       r = await _box!.clear();
-      updateChecksum();
     } else {
       r = 0;
     }
@@ -87,7 +87,6 @@ class ManagedTree {
     if (_box != null) {
       _box!.deleteFromDisk();
       _updatesController.close();
-      updateChecksum();
     }
   }
 
@@ -99,8 +98,6 @@ class ManagedTree {
         futures.add(insert(key, value));
       });
       await Future.wait(futures);
-      debugPrint("Set from map, checksum update");
-      updateChecksum();
     }
   }
 

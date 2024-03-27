@@ -38,8 +38,8 @@ impl Client {
   pub fn send_message(&self, msg: String) {
     // send message to client
     if let Some(sender) = &self.sender {
-      match sender.send(Ok(Message::text(msg))) {
-        Ok(_) => debug!("message sent to client"),
+      match sender.send(Ok(Message::text(msg.clone()))) {
+        Ok(_) => debug!("message sent to client: {}", msg),
         Err(e) => error!("error sending message to client: {}", e),
       }
     }
