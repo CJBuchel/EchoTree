@@ -1,6 +1,7 @@
 use log::{error, info, warn};
 use protocol::schemas::Role;
 
+#[derive(Clone)]
 
 pub struct RoleManager {
   db: sled::Db,

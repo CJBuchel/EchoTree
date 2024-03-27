@@ -92,8 +92,4 @@ impl TreeHierarchy {
       Err(e) => error!("remove failed: {}", e)
     }
   }
-
-  pub fn iter(&self) -> sled::Iter {
-    self.hierarchy.iter()
-  }
 }

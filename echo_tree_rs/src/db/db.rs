@@ -3,8 +3,8 @@ use log::{debug, error};
 use super::{role_manager::RoleManager, tree_hierarchy::TreeHierarchy, tree_map::TreeMap};
 
 pub struct DatabaseConfig {
-  db_path: String,
-  metadata_path: String,
+  pub db_path: String,
+  pub metadata_path: String,
 }
 
 impl Default for DatabaseConfig {
@@ -58,7 +58,7 @@ impl Database {
   }
 
   // drops all the trees, not recoverable unless new hierarchy is created and new trees are opened
-  pub fn drop(&mut self) {
+  pub fn drop_db(&mut self) {
     self.trees.drop();
     self.hierarchy.drop();
     self.role_manager.drop();

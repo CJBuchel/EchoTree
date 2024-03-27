@@ -1,114 +1,122 @@
-// library echo_tree_flutter;
+import 'dart:convert';
 
-// import 'dart:convert';
-// import 'dart:io';
+import 'package:echo_tree_flutter/client/network_service.dart';
+import 'package:echo_tree_flutter/schema/schema.dart';
 
-// import 'package:http/http.dart' as http;
-// import 'package:echo_tree_flutter/schema/schema.dart';
-// import 'package:web_socket_channel/web_socket_channel.dart';
+class EchoTreeClient extends EchoTreeNetworkService {
+  static final EchoTreeClient _instance = EchoTreeClient._internal();
 
-// Future<bool> _checkPulse(String url) async {
-//   // check the server pulse
-//   final response = await http.get(Uri.parse("$url/echo_tree/pulse"));
-//   if (response.statusCode == HttpStatus.ok) {
-//     return true;
-//   } else {
-//     return false;
-//   }
-// }
+  factory EchoTreeClient() {
+    return _instance;
+  }
 
-// Future<RegisterResponse> _registerEchoTree(
-//   String url, {
-//   required List<String> echoTrees,
-//   String? roleId,
-//   String? password,
-// }) async {
-//   // register the client
-//   final request = RegisterRequest(
-//     echoTrees: echoTrees,
-//     roleId: roleId,
-//     password: password,
-//   ).toJson();
+  EchoTreeClient._internal();
 
-//   final response = await http.post(
-//     Uri.parse("$url/echo_tree/register"),
-//     body: jsonEncode(request),
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//   );
+  void insert(String treeName, String key, String json) async {
+    if (!connected) {
+      return;
+    }
 
-//   if (response.statusCode == HttpStatus.ok) {
-//     return RegisterResponse.fromJson(jsonDecode(response.body));
-//   } else {
-//     throw Exception('Failed to register client');
-//   }
-// }
+    // create the event
+    var event = InsertEvent(
+      treeName: treeName,
+      key: key,
+      data: json,
+    ).toJson();
 
-// class EchoTreeClient {
-//   final String url;
+    // create the message
+    EchoTreeClientSocketMessage message = EchoTreeClientSocketMessage(
+      authToken: authToken,
+      messageEvent: EchoTreeClientSocketEvent.INSERT_EVENT,
+      message: jsonEncode(event),
+    );
 
-//   String? _connectedUrl;
-//   String? _connectedAuthToken;
-//   WebSocketChannel? _channel;
+    // send the event
+    sendMessage(message);
+  }
 
-//   EchoTreeClient(this.url);
+  void get(String treeName, String key) {
+    if (!connected) {
+      return;
+    }
 
-//   Future<bool> checkPulse() async {
-//     return await _checkPulse(url);
-//   }
+    // create the message
+    var event = GetEvent(
+      treeName: treeName,
+      key: key,
+    ).toJson();
 
-//   Future<RegisterResponse> register({
-//     required List<String> echoTrees,
-//     String? roleId,
-//     String? password,
-//   }) async {
-//     return await _registerEchoTree(
-//       url,
-//       echoTrees: echoTrees,
-//       roleId: roleId,
-//       password: password,
-//     );
-//   }
+    // create the message
+    EchoTreeClientSocketMessage message = EchoTreeClientSocketMessage(
+      authToken: authToken,
+      messageEvent: EchoTreeClientSocketEvent.GET_EVENT,
+      message: jsonEncode(event),
+    );
 
-//   Future<void> connect({
-//     String? roleId,
-//     String? password,
-//   }) async {
-//     bool pulse = await _checkPulse(url);
-//     if (pulse) {
-//       // registering the client
-//       RegisterResponse response = await register(echoTrees: [], roleId: roleId, password: password);
+    // send the event
+    sendMessage(message);
+  }
 
-//       _connectedUrl = response.url;
-//       _connectedAuthToken = response.authToken;
+  void delete(Map<String, String> treeItems) {
+    if (!connected) {
+      return;
+    }
 
-//       // start the websocket connection
-//       _channel = WebSocketChannel.connect(
-//         Uri.parse(_connectedUrl ?? "ws://localhost:2121"),
-//       );
-//     } else {
-//       throw Exception('Failed to connect to $url');
-//     }
-//   }
+    // create the message
+    var event = DeleteEvent(
+      treeItems: treeItems,
+    ).toJson();
 
-//   void sendMessage(EchoTreeClientSocketMessage m) {
-//     if (_channel != null) {
-//       _channel!.sink.add(jsonEncode(m.toJson()));
-//     }
-//   }
+    // create the message
+    EchoTreeClientSocketMessage message = EchoTreeClientSocketMessage(
+      authToken: authToken,
+      messageEvent: EchoTreeClientSocketEvent.DELETE_EVENT,
+      message: jsonEncode(event),
+    );
 
-//   void sendRawMessage(String m) {
-//     if (_channel != null) {
-//       _channel!.sink.add(m);
-//     }
-//   }
+    // send the event
+    sendMessage(message);
+  }
 
-//   String getAuthToken() {
-//     return _connectedAuthToken ?? "";
-//   }
+  void setTree(Map<String, Map<String, String>> trees) {
+    if (!connected) {
+      return;
+    }
 
-//   String getConnectedUrl() {
-//     return _connectedUrl ?? "";
-//   }
-// }
+    // create the message
+    var event = SetTreeEvent(
+      trees: trees,
+    ).toJson();
+
+    // create the message
+    EchoTreeClientSocketMessage message = EchoTreeClientSocketMessage(
+      authToken: authToken,
+      messageEvent: EchoTreeClientSocketEvent.SET_TREE_EVENT,
+      message: jsonEncode(event),
+    );
+
+    // send the event
+    sendMessage(message);
+  }
+
+  void getTree(List<String> treeNames) {
+    if (!connected) {
+      return;
+    }
+
+    // create the message
+    var event = GetTreeEvent(
+      treeNames: treeNames,
+    ).toJson();
+
+    // create the message
+    EchoTreeClientSocketMessage message = EchoTreeClientSocketMessage(
+      authToken: authToken,
+      messageEvent: EchoTreeClientSocketEvent.GET_TREE_EVENT,
+      message: jsonEncode(event),
+    );
+
+    // send the event
+    sendMessage(message);
+  }
+}
