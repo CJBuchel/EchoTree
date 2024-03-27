@@ -25,8 +25,8 @@ pub async fn unsubscribe_broker(uuid:String, msg: EchoTreeClientSocketMessage, c
   };
 
   // remove only the trees the client has
-  let new_tree_names: Vec<String> = msg.tree_names.iter().filter(|tree| client.echo_trees.contains(tree)).cloned().collect();
-  client.echo_trees.retain(|t| !new_tree_names.contains(t));
+  let new_tree_names: Vec<String> = msg.tree_names.iter().filter(|tree| client.subscribed_trees.contains(tree)).cloned().collect();
+  client.subscribed_trees.retain(|t| !new_tree_names.contains(t));
 
   clients.write().await.insert(uuid.clone(), client.clone());
 

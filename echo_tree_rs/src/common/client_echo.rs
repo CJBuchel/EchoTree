@@ -1,7 +1,7 @@
 use log::debug;
 use protocol::schemas::socket_protocol::server_socket_protocol::{EchoItemEvent, EchoTreeEvent, EchoTreeEventTree, EchoTreeServerSocketEvent, EchoTreeServerSocketMessage};
 
-use super::{client::Client, ClientHashMap};
+use super::{client::Client, ClientHashMap, client_access::ClientAccess};
 
 pub trait ClientEcho {
   fn echo_tree(&self, msg: Vec<EchoTreeEventTree>);
@@ -13,7 +13,7 @@ impl ClientEcho for Client {
     debug!("echoing tree to client: {}", self.auth_token);
     let filtered_subscribed_trees: Vec<EchoTreeEventTree> = msg
       .iter()
-      .filter(|t| self.has_access_and_subscribed_to_tree(&t.tree_name))
+      .filter(|t| self.has_read_access_and_subscribed_to_tree(&t.tree_name))
       .map(|t| t.clone())
       .collect();
 
@@ -29,12 +29,12 @@ impl ClientEcho for Client {
       let json = serde_json::to_string(&echo_message).unwrap_or_default();
       self.send_message(json);
     } else {
-      debug!("no trees to echo to client: {}, client trees: {:?}", self.auth_token, self.echo_trees);
+      debug!("no trees to echo to client: {}, client trees: {:?}", self.auth_token, self.subscribed_trees);
     }
   }
 
   fn echo_item(&self, msg: EchoItemEvent) {
-    if self.has_access_and_subscribed_to_tree(&msg.tree_name) {
+    if self.has_read_access_and_subscribed_to_tree(&msg.tree_name) {
       let echo_message = EchoTreeServerSocketMessage {
         auth_token: self.auth_token.clone(),
         message_event: EchoTreeServerSocketEvent::EchoItemEvent,

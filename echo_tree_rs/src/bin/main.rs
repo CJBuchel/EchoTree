@@ -17,25 +17,17 @@ async fn main() {
 
   let mut database = db::db::Database::new(db::db::DatabaseConfig::default());
 
-  let server_test = TestStruct {
-    test: "lofi beats baby".to_string(),
-  };
-
   let schema = schemars::schema_for!(TestStruct);
   let schema = serde_json::to_string(&schema).unwrap_or_default();
 
   database.add_tree("test:user".to_string(), schema);
 
-
-  // serialize the contact and insert it into the database
-  let contact_s = serde_json::to_string(&server_test).unwrap_or_default();
-  // database.insert("test:user".to_string(), "Server".to_string(), contact_s);
-
   // create role
   let public_role = Role {
     role_id: "public".to_string(),
     password: "public".to_string(),
-    echo_trees: vec!["test:user".to_string()],
+    read_write_echo_trees: vec![],
+    read_echo_trees: vec!["test:user".to_string()],
   };
   database.get_role_manager().insert_role(public_role.to_owned());
 

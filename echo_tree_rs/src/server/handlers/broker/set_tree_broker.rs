@@ -4,7 +4,7 @@ use protocol::schemas::socket_protocol::{
   server_socket_protocol::{EchoTreeEventTree, StatusResponseEvent},
 };
 
-use crate::{common::{ClientMap, EchoDB, client_echo::ClientEcho}, db::managed_tree::ManagedTree};
+use crate::{common::{ClientMap, EchoDB, client_echo::ClientEcho, client_access::ClientAccess}, db::managed_tree::ManagedTree};
 
 pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
   let client = match clients.read().await.get(&uuid) {
@@ -30,13 +30,13 @@ pub async fn set_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
 
   // create list of tree names the client is trying to access
   let tree_names: Vec<String> = msg.trees.iter().map(|(t, _)| t.clone()).collect();
-  let unauthorized_tree_names: Vec<String> = client.filter_unauthorized_trees(tree_names.clone());
+  let unauthorized_tree_names: Vec<String> = client.filter_unauthorized_read_write_trees(tree_names.clone());
   let mut changed_trees: Vec<ManagedTree> = Vec::new();
 
   // access db and set trees the client has access to
   let mut write_db = db.write().await;
   for (tree_name, tree) in msg.trees {
-    if client.has_access_to_tree(&tree_name) {
+    if client.has_read_write_access_to_tree(&tree_name) {
       let managed_tree = match write_db.get_tree_map_mut().get_tree_mut(tree_name.clone()) {
         Some(t) => t,
         None => {

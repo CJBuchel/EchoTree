@@ -331,19 +331,26 @@
       "description": "Role used for authentication to branches of the database",
       "type": "object",
       "required": [
-        "echo_trees",
         "password",
+        "read_echo_trees",
+        "read_write_echo_trees",
         "role_id"
       ],
       "properties": {
-        "echo_trees": {
+        "password": {
+          "type": "string"
+        },
+        "read_echo_trees": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "password": {
-          "type": "string"
+        "read_write_echo_trees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "role_id": {
           "type": "string"

@@ -9,7 +9,7 @@ pub struct RoleManager {
 
 impl RoleManager {
   pub fn open(db: &sled::Db, metadata_path: String) -> RoleManager {
-    let manager = match db.open_tree(format!("{}/roles", metadata_path)) {
+    let manager = match db.open_tree(format!("{}:roles", metadata_path)) {
       Ok(roles) => roles,
       Err(e) => {
         panic!("open_tree failed: {}", e);
@@ -84,9 +84,19 @@ impl RoleManager {
     }
   }
 
-  pub fn get_role_access(&self, role_id: String) -> Vec<String> {
+  pub fn get_role_read_access(&self, role_id: String) -> Vec<String> {
     match self.get_role(role_id.clone()) {
-      Some(v) => v.echo_trees,
+      Some(v) => v.read_echo_trees,
+      None => {
+        warn!("role not found: {}", role_id);
+        vec![]
+      }
+    }
+  }
+
+  pub fn get_role_read_write_access(&self, role_id: String) -> Vec<String> {
+    match self.get_role(role_id.clone()) {
+      Some(v) => v.read_write_echo_trees,
       None => {
         warn!("role not found: {}", role_id);
         vec![]

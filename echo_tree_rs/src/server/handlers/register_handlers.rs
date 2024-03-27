@@ -3,10 +3,10 @@ use protocol::schemas::http_protocol::{RegisterRequest, RegisterResponse};
 
 use crate::common::{client::Client, ClientMap, EchoDB, ResponseResult};
 
-async fn register_client(uuid: String, auth_token:String, echo_trees: Vec<String>, role_trees: Vec<String>, clients: ClientMap) {
+async fn register_client(uuid: String, auth_token:String, subscribed_trees: Vec<String>, role_read_trees: Vec<String>, role_read_write_trees: Vec<String>, clients: ClientMap) {
 
   debug!("registering client with uuid: {}", uuid);
-  clients.write().await.insert(uuid, Client::new(auth_token, role_trees, echo_trees, None));
+  clients.write().await.insert(uuid, Client::new(auth_token, role_read_trees, role_read_write_trees, subscribed_trees, None));
 }
 
 pub async fn register_handler(body: RegisterRequest, clients: ClientMap, database: EchoDB, port: u16) -> ResponseResult<impl warp::reply::Reply> {
@@ -19,12 +19,17 @@ pub async fn register_handler(body: RegisterRequest, clients: ClientMap, databas
   let role_id = body.role_id.clone().unwrap_or("".to_string());
   let password = body.password.clone().unwrap_or("".to_string());
 
-  let role_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password) {
-    true => db.get_role_manager().get_role_access(role_id),
+  let role_read_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password.clone()) {
+    true => db.get_role_manager().get_role_read_access(role_id.clone()),
     false => vec![],
   };
 
-  register_client(uuid.clone(), auth_token.clone(), body.echo_trees, role_trees, clients).await;
+  let role_read_write_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password) {
+    true => db.get_role_manager().get_role_read_write_access(role_id),
+    false => vec![],
+  };
+
+  register_client(uuid.clone(), auth_token.clone(), body.echo_trees, role_read_trees, role_read_write_trees, clients).await;
 
   // @TODO (fixup external protocol chooser)
   #[cfg(not(debug_assertions))]

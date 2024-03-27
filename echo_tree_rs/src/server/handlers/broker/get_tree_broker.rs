@@ -1,6 +1,6 @@
 use protocol::schemas::socket_protocol::{client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage, GetTreeEvent}, server_socket_protocol::{EchoTreeEventTree, StatusResponseEvent}};
 
-use crate::common::{client_echo::ClientEcho, ClientMap, EchoDB};
+use crate::common::{client_echo::ClientEcho, ClientMap, EchoDB, client_access::ClientAccess};
 
 
 pub async fn get_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
@@ -26,7 +26,7 @@ pub async fn get_tree_broker(uuid: String, msg: EchoTreeClientSocketMessage, cli
   };
 
   // filter for accessible trees
-  let accessible_trees = client.filter_accessible_trees(msg.tree_names);
+  let accessible_trees = client.filter_read_accessible_trees(msg.tree_names);
   
   // get the trees
   let read_db = db.read().await;

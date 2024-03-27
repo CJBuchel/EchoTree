@@ -1,6 +1,6 @@
 use protocol::schemas::socket_protocol::{client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage, GetEvent}, server_socket_protocol::{EchoItemEvent, StatusResponseEvent}};
 
-use crate::common::{client_echo::ClientEcho, ClientMap, EchoDB};
+use crate::common::{client_echo::ClientEcho, ClientMap, EchoDB, client_access::ClientAccess};
 
 pub async fn get_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
   let client = match clients.read().await.get(&uuid) {
@@ -25,7 +25,7 @@ pub async fn get_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients:
   };
 
   // check if client has access to the tree
-  if client.has_access_to_tree(&msg.tree_name) {
+  if client.has_read_access_to_tree(&msg.tree_name) {
     // db access
     let read_db = db.read().await;
     let res = read_db.get(msg.tree_name.clone(), msg.key.clone());

@@ -10,7 +10,8 @@ pub mod http_protocol;
 pub struct Role {
   pub role_id: String,
   pub password: String,
-  pub echo_trees: Vec<String>, // list of topics/trees the role can access
+  pub read_echo_trees: Vec<String>, // list of topics/trees the role can read from
+  pub read_write_echo_trees: Vec<String>, // list of topics/trees the role can write to
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, JsonSchema)]

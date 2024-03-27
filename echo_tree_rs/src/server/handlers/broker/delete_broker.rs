@@ -1,7 +1,6 @@
-use log::warn;
 use protocol::schemas::socket_protocol::{client_socket_protocol::{DeleteEvent, EchoTreeClientSocketEvent, EchoTreeClientSocketMessage}, server_socket_protocol::{EchoItemEvent, StatusResponseEvent}};
 
-use crate::common::{ClientMap, EchoDB, client_echo::ClientEcho};
+use crate::common::{ClientMap, EchoDB, client_echo::ClientEcho, client_access::ClientAccess};
 
 
 pub async fn delete_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
@@ -27,16 +26,16 @@ pub async fn delete_broker(uuid: String, msg: EchoTreeClientSocketMessage, clien
   };
 
   // create list of un accessible tree names the client is trying to access
-  let unauthorized_tree_names: Vec<String> = client.filter_unauthorized_trees(msg.tree_items.iter().map(|(t, _)| t.clone()).collect());
+  let unauthorized_tree_names: Vec<String> = client.filter_unauthorized_read_write_trees(msg.tree_items.iter().map(|(t, _)| t.clone()).collect());
   let mut changed_items: Vec<EchoItemEvent> = Vec::new();
   
   let mut write_db = db.write().await;
   for (tree_name, key) in msg.tree_items {
-    if client.has_access_to_tree(&tree_name) {
+    if client.has_read_write_access_to_tree(&tree_name) {
       let managed_tree = match write_db.get_tree_map_mut().get_tree_mut(tree_name.clone()) {
         Some(t) => t,
         None => {
-          warn!("{}: tree not found: {}", uuid, tree_name);
+          log::warn!("{}: tree not found: {}", uuid, tree_name);
           continue;
         }
       };

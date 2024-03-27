@@ -394,25 +394,29 @@ class StatusResponseEvent {
 
 ///Role used for authentication to branches of the database
 class Role {
-    List<String> echoTrees;
     String password;
+    List<String> readEchoTrees;
+    List<String> readWriteEchoTrees;
     String roleId;
 
     Role({
-        required this.echoTrees,
         required this.password,
+        required this.readEchoTrees,
+        required this.readWriteEchoTrees,
         required this.roleId,
     });
 
     factory Role.fromJson(Map<String, dynamic> json) => Role(
-        echoTrees: List<String>.from(json["echo_trees"].map((x) => x)),
         password: json["password"],
+        readEchoTrees: List<String>.from(json["read_echo_trees"].map((x) => x)),
+        readWriteEchoTrees: List<String>.from(json["read_write_echo_trees"].map((x) => x)),
         roleId: json["role_id"],
     );
 
     Map<String, dynamic> toJson() => {
-        "echo_trees": List<dynamic>.from(echoTrees.map((x) => x)),
         "password": password,
+        "read_echo_trees": List<dynamic>.from(readEchoTrees.map((x) => x)),
+        "read_write_echo_trees": List<dynamic>.from(readWriteEchoTrees.map((x) => x)),
         "role_id": roleId,
     };
 }

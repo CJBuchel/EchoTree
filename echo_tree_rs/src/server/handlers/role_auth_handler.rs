@@ -13,8 +13,15 @@ pub async fn role_auth_handler(client_uuid: String, body: RoleAuthenticateReques
   let db = database.read().await;
 
   // check authentication
-  let role_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password) {
-    true => db.get_role_manager().get_role_access(role_id),
+  let role_read_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password.clone()) {
+    true => db.get_role_manager().get_role_read_access(role_id.clone()),
+    false => {
+      return Err(warp::reject::reject());
+    },
+  };
+
+  let role_read_write_trees = match db.get_role_manager().authenticate_role(role_id.clone(), password) {
+    true => db.get_role_manager().get_role_read_write_access(role_id),
     false => {
       return Err(warp::reject::reject());
     },
@@ -28,7 +35,8 @@ pub async fn role_auth_handler(client_uuid: String, body: RoleAuthenticateReques
     }
   };
 
-  client.role_trees = role_trees;
+  client.role_read_access_trees = role_read_trees;
+  client.role_read_write_access_trees = role_read_write_trees;
   clients.write().await.insert(client_uuid, client);
 
   Ok(warp::reply::reply())

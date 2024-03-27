@@ -30,6 +30,10 @@ void main() async {
   // wait for 5 seconds
   await Future.delayed(const Duration(seconds: 20));
 
+  EchoTreeClient().insert("test:user", "Bambi", jsonEncode(clientTest));
+
+  await Future.delayed(const Duration(seconds: 20));
+
   await EchoTreeClient().disconnect();
 
   test('Test', () {});

@@ -1,6 +1,6 @@
 use protocol::schemas::socket_protocol::{client_socket_protocol::{EchoTreeClientSocketEvent, EchoTreeClientSocketMessage, InsertEvent}, server_socket_protocol::{EchoItemEvent, StatusResponseEvent}};
 
-use crate::common::{ClientMap, EchoDB, client_echo::ClientEcho};
+use crate::common::{ClientMap, EchoDB, client_echo::ClientEcho, client_access::ClientAccess};
 
 
 pub async fn insert_broker(uuid: String, msg: EchoTreeClientSocketMessage, clients: &ClientMap, db: &EchoDB) {
@@ -26,7 +26,7 @@ pub async fn insert_broker(uuid: String, msg: EchoTreeClientSocketMessage, clien
   };
 
   // check if client has access to the tree
-  if client.has_access_to_tree(&msg.tree_name) {
+  if client.has_read_write_access_to_tree(&msg.tree_name) {
     // db access
     let mut write_db = db.write().await;
     let res = write_db.insert(msg.tree_name.clone(), msg.key.clone(), msg.data.clone());

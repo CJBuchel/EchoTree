@@ -4,6 +4,7 @@ use warp::Filter;
 use self::client::Client;
 
 pub mod client;
+pub mod client_access;
 pub mod client_echo;
 
 pub type ClientHashMap = std::collections::HashMap<String, Client>; // client id, client
